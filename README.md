@@ -1,6 +1,6 @@
 # KorraAI
 
-Is a framework that allows you to create yout own bot, also called Embodied Conversational Agents (ECA).
+Is a framework that allows you to create yout own bot, also called Embodied Conversational Agent (ECA).
 
 Installation:
 
