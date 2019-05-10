@@ -1,6 +1,11 @@
 # KorraAI
 
-Is a framework that allows you to create yout own bot, also called Embodied Conversational Agent (ECA). It uses distributions and probabilisitic programming to encode behavior and unpected flow of events. It comes with built-in voice synthesis, lips sync, simple bot movement, eye movement and other that make it look more human-like.   
+Is a framework that allows you to create yout own bot, also called Embodied Conversational Agent (ECA). It uses distributions and probabilisitic programming to encode behavior and unpected flow of events. It comes with built-in voice synthesis, lips sync, simple bot movement, eye movement, voice annotation and other that make it look more human-like.
+
+Application:
+- TV presenter
+- Entertainer
+- Sales agent
 
 Installation:
 
