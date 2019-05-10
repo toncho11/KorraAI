@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.539
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KorraAI", "KorraAI\KorraAI.csproj", "{C5EF0F83-8128-4F00-878C-B1EC3D8ABFDB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{668767F6-BD68-449A-907D-499CFE78BC02} = {668767F6-BD68-449A-907D-499CFE78BC02}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KorraAIShared", "KorraAIShared\KorraAIShared.csproj", "{668767F6-BD68-449A-907D-499CFE78BC02}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C5EF0F83-8128-4F00-878C-B1EC3D8ABFDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5EF0F83-8128-4F00-878C-B1EC3D8ABFDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5EF0F83-8128-4F00-878C-B1EC3D8ABFDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5EF0F83-8128-4F00-878C-B1EC3D8ABFDB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{668767F6-BD68-449A-907D-499CFE78BC02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{668767F6-BD68-449A-907D-499CFE78BC02}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{668767F6-BD68-449A-907D-499CFE78BC02}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{668767F6-BD68-449A-907D-499CFE78BC02}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8C19CCC9-5684-4A56-B844-AD692B9932AA}
+	EndGlobalSection
+EndGlobal
