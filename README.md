@@ -4,4 +4,4 @@ Is a framework that allows you to create yout own bot, also called Embodied Conv
 
 Installation:
 
-Compile the project with VS 2017. Download the "body" and replace the KorraAI.dll with the one you just compiled. Start the executable "Companion.exe".
+Compile the project with VS 2017. Download the "body" and replace the KorraAI.dll the "cyber brain" with the one you just compiled. Start the executable "Companion.exe".
