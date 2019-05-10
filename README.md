@@ -9,6 +9,6 @@ Application:
 
 Installation:
 
-Compile the project with VS 2017. Download the "body" [KorraAIBody.zip](https://1drv.ms/u/s!AsoOXKPKfQ6FgcoIhAu3oda1hhlSBQ) and replace the KorraAI.dll the "cyber brain" with the one you just compiled. The body is a binary compiled Unity 3D application that will load the KorraAI.dll you just compiled and used it to control a female bot. Start the executable using "Companion.exe". 
+Compile the project with VS 2017. Download the "body" [KorraAIBody.zip](https://1drv.ms/u/s!AsoOXKPKfQ6FgcoIhAu3oda1hhlSBQ) and replace the KorraAI.dll the "cyber brain" with the one you just compiled. The body is a binary compiled Unity 3D application that will load the KorraAI.dll you just compiled and used it to control a female bot. Start the application using "Companion.exe". 
 
 The SHA1 for the KorraAIBody.zip is 95CF36DCD13225BCC9343B865BE68EC74D46A800
