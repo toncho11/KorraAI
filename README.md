@@ -10,7 +10,7 @@ The probability of saying a joke can depend on a base joke probability (that des
 **Example 2:**
 Time is also encoded as distributions and not fixed intervals. For example late in the night we might want to program the bot to slow down in order to persuade the user to go to sleep (bore him). We can reduce the time between interactions, but not by a fixed amount. We do that by changeing the parameters of the distribution (ex. Normal(m,n) distribution) so that the pauses between interactions are centered for example around 2.1 seconds and not 3.1 seconds.
 
-Cognitive and physical cabilties:
+**Cognitive and physical cabilties:**
 The bot is programmed in Unity and comes with a quality 3D model, voice synthesis, lips sync, simple bot movement, eye movements and blinks, voice annotation, at least 6 cloth outfits and other that make it look human-like. No voice recognition is currently included. Interaction with the bot is done with mouse and keyboard.
 
 [Examples](../../wiki/Examples)
