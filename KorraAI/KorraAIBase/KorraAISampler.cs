@@ -27,15 +27,17 @@ namespace Companion.KorraAI
         /// <summary>
         /// To set pobabilities but also connections between them 
         /// </summary>
-        public void UpdateProbVariables(string name)
-        {
+        //public void SetProbVariables(string name)
+        //{
 
-        }
+        //}
+        /// <summary>
+        /// To set pobabilities but also connections between them 
+        /// </summary>
+        //public void UpdateProbVariables(string name)
+        //{
 
-        public void GetNextItem()
-        {
-
-        }
+        //}
 
         private Queue<string> GenerateActions(string[] disabledActions)
         {

@@ -54,6 +54,7 @@
     <Compile Include="KorraAIBase\KorraAISampler.cs" />
     <Compile Include="KorraAIBase\PureFact.cs" />
     <Compile Include="KorraAIBase\UncertainFact.cs" />
+    <Compile Include="KorraAIModels\IDistributions.cs" />
     <Compile Include="KorraAIModels\IItems.cs" />
     <Compile Include="KorraAIModels\IKorraAIModel.cs" />
     <Compile Include="KorraAIModels\IPhrases.cs" />
@@ -61,6 +62,7 @@
     <Compile Include="KorraAIModels\Joi\EN\Items.cs" />
     <Compile Include="KorraAIModels\Joi\EN\Phrases.cs" />
     <Compile Include="KorraAIModels\Joi\EN\SpeechAdaptation.cs" />
+    <Compile Include="KorraAIModels\Joi\JoiDistributions.cs" />
     <Compile Include="KorraAIModels\Joi\JoiModel.cs" />
     <Compile Include="KorraAIModels\KorraModelHelper.cs" />
     <Compile Include="KorraAIModels\ModelContext.cs" />
