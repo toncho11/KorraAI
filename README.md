@@ -4,12 +4,16 @@ Is a framework that allows you to create yout own bot, also called Embodied Conv
 
 The currently enoded bot is called Joi, a female one. 
 
-Probabilsitic programming is a way to encode Bayes networks. Otherwise said it is a way to manage uncertain concepts. Example: the probability of saying a joke can depend on a base joke probability and the moood of the user. For example a bad mood can indicate that it is better that the bot says more jokes. So if the user has indicated a bad mood we can infer a higher chance of saying a joke, for example 10 jokes per hour in comparison to 7 jokes per hour, if he declared at some point that he was in a good mood. Mood on the other hand can be both a directly answered question or implicitly inferred based on other concepts modeled as probabilitic variables in a Bayes network.
+Probabilsitic programming is a way to encode Bayes networks. Otherwise said it is a way to manage uncertain concepts. 
 
-Time is also encoded as distributions and not fixed intervals. For example late in the night we might want to program the bot to slow down its responsivenes in order to persuade the user to go to sleep (bore him). We can reduce the time between interactions. If we want to reduce it, we just change the parameters of the distribution so that the pauses between interactions are centered around 2.1 seonds and not 3.1 seconds.
+Example 1: 
+The probability of saying a joke can depend on a base joke probability and the moood of the user. For example a bad mood can indicate that it is better that the bot says more jokes (to improve the mood the Interlocutor). So if the user has indicated a bad mood we can infer a higher chance of saying a joke, for example 10 jokes per hour in comparison to 7 jokes per hour, if he declared at some point that he was in a good mood. The "mood" on the other hand can be both a directly answered question or implicitly inferred based on other concepts modeled as probabilitic variables in a Bayes network.
+
+Example 2:
+Time is also encoded as distributions and not fixed intervals. For example late in the night we might want to program the bot to slow down its responsivenes in order to persuade the user to go to sleep (bore him). We can reduce the time between interactions. If we want to reduce it, we just change the parameters of the distribution so that the pauses between interactions are centered for example around 2.1 seconds and not 3.1 seconds.
 
 Cognitive and physical cabilties:
-It comes with built-in voice synthesis, lips sync, simple bot movement, eye movement, voice annotation, at least 6 cloth outfits and other that make it look human-like.
+The bot is programmed in Unity and comes with a quality 3D model, voice synthesis, lips sync, simple bot movement, eye movements and blinks, voice annotation, at least 6 cloth outfits and other that make it look human-like. No voice recognition is currently included. Interaction with the bot is done with mouse and keyboard.
 
 Application:
 - TV presenter
