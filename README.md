@@ -18,6 +18,6 @@ Application:
 
 Installation:
 
-Add references in VS 2017/2015 to UnityEngine.dll from a already installed Unity 3D. Compile this project with VS 2017 to produce KorraAI.dll. Download the "body" [KorraAIBody.zip](https://1drv.ms/u/s!AsoOXKPKfQ6FgcoIhAu3oda1hhlSBQ) and replace the KorraAI.dll the "cyber brain" with the one you just compiled. The body is a binary compiled Unity 3D application that will load the KorraAI.dll you just compiled and used it to control the bot. Start the application using "Companion.exe". 
+Add references in VS 2017/2015 to UnityEngine.dll from a already installed Unity 3D. Compile this project with VS 2017 to produce KorraAI.dll. Download the "body" [KorraAIBody.zip](https://1drv.ms/u/s!AsoOXKPKfQ6FgcpyvB30Zeb7aBTzJQ) and replace the KorraAI.dll the "cyber brain" with the one you just compiled. The body is a binary compiled Unity 3D application that will load the KorraAI.dll you just compiled and used it to control the bot. Start the application using "Companion.exe". 
 
 The SHA1 for the KorraAIBody.zip is 8012DE173B4EA00132E4F329D14668F845BE2B23
