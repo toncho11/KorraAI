@@ -129,7 +129,7 @@ namespace Companion.KorraAI.Models.Joi
             else return "You need to go?";
         }
 
-        public string ILookGood() 
+        public string ILookGood() //currently not used
         {
             string value = KorraModelHelper.GetChance(new string[] { "I really look gorgeous!",
                                                                      "I look <prosody rate=\"-40%\">awe</prosody><prosody volume=\"loud\">some</prosody>.",

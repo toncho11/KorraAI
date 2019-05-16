@@ -4,8 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Companion;
-
 namespace Companion.KorraAI
 {
     public delegate string PureFactResponseFunction(string value,out bool isValid);

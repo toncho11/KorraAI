@@ -14,9 +14,6 @@ namespace Companion.KorraAI
     {
         ModelContext context;
 
-        //string[] Categories;
-        //Prob[] ProbVariablesList;
-
         System.Random rnd = new System.Random();
 
         private Queue<string> allSuggestions = new Queue<string>();
@@ -25,34 +22,6 @@ namespace Companion.KorraAI
         public void Init(ModelContext context)
         {
             this.context = context;
-
-            //SetCategories();
-        }
-
-        //public void SetCategoryProb()
-        //{
-            
-        //}
-
-        //public void SetCategories()
-        //{
-        //    string[] Categories = { ActionsEnum.MakeSuggestion, ActionsEnum.AskUncertanFactQuestion, ActionsEnum.AskPureFactQuestionAboutUser, ActionsEnum.SharePureFactInfoAboutBot, ActionsEnum.ChangeVisualAppearance, ActionsEnum.ExpressMentalState };
-        //    //build list of categories
-        //    //assign list of categories to variables
-        //}
-
-
-        /// <summary>
-        /// To override this methos
-        /// </summary>
-        public void SetOnSampleGeneratedFunc(Func<float> f)
-        {
-
-        }
-
-        public void SetPolicyAdjustFunc(Func<float> f)
-        {
-
         }
 
         /// <summary>

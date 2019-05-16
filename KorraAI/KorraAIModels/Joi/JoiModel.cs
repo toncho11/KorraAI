@@ -21,6 +21,8 @@ namespace Companion.KorraAI.Models.Joi
 
         KorraAISampler korraSampler;
 
+        IDistributions cognitiveDist;
+
         public event EventHandler ContextLoaded;
 
         //Set ProbVariables here
@@ -73,6 +75,13 @@ namespace Companion.KorraAI.Models.Joi
 
             korraSampler = new KorraAISampler();
             korraSampler.Init(CC);
+
+            cognitiveDist = new JoiDistributions();
+            //cache values
+            cognitiveDist.NextSmilePauseTime();
+            cognitiveDist.NextTimeDurationEyesStayFocusedOnCameraAfterStartedTalking();
+            cognitiveDist.GetNextInteactionPause();
+            cognitiveDist.NextQuestionTimeout();
 
             isInitialized = true;
             ContextLoaded(this, EventArgs.Empty);
@@ -219,6 +228,12 @@ namespace Companion.KorraAI.Models.Joi
         {
             bool isAnswerd = fact.IsAnswered;
             string responseValue = fact.Value;
+        }
+
+        public IDistributions GetCognitiveDist()
+        {
+            if (!isInitialized) SharedHelper.LogError("Not initialized.");
+            return cognitiveDist;
         }
     }
 }

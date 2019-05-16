@@ -20,6 +20,8 @@ namespace Companion.KorraAI.Models
 
         ModelContext GetContext();
 
+        IDistributions GetCognitiveDist();
+
         bool ModelUpdate(TimeSpan timeSinceStart);
 
         void BeforeAnalyseUserResponse(PureFact fact);
