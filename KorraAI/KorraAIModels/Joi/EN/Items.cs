@@ -56,7 +56,7 @@ namespace Companion.KorraAI.Models.Joi //This is the database
                                             ));
 
             PureFacts.AddPureFact(new PureFact("UserMovieYesterday", PureFactType.AboutUser, "Did you watch a movie yesterday?", new string[] { phrases.Yes(), phrases.No() }, "", UIAnswer.Binary));
-
+            PureFacts.AddPureFact(new PureFact("UserDoesSport", PureFactType.AboutUser, "Do you do sport at regular basis?", new string[] { "Yes", "No" }, "", UIAnswer.Binary));
             #endregion
 
             #region Pure Facts about the Bot - they are provided as statements

@@ -25,11 +25,9 @@ namespace Companion.KorraAI.Models.Joi
 
         public event EventHandler ContextLoaded;
 
-        //Set ProbVariables here
-        //accessible directly
         bool isInitialized = false;
 
-        ModelContext CC; //CurrentContext
+        ModelContext context;
 
         public string Name
         {
@@ -49,15 +47,15 @@ namespace Companion.KorraAI.Models.Joi
 
         public void Init()
         {
-            CC = new ModelContext();
+            context = new ModelContext();
 
             if (BotConfigShared.Language == Lang.EN)
             {
-                CC.Phrases = new PhrasesEN();
+                context.Phrases = new PhrasesEN();
 
-                CC.Items = new ItemsEN();
+                context.Items = new ItemsEN();
 
-                CC.SpeechAdaptation = new SpeechAdaptationEN();
+                context.SpeechAdaptation = new SpeechAdaptationEN();
             }
             else
             {
@@ -71,10 +69,10 @@ namespace Companion.KorraAI.Models.Joi
                 //}
             }
 
-            CC.Items.LoadAll(CC.Phrases);
+            context.Items.LoadAll(context.Phrases);
 
             korraSampler = new KorraAISampler();
-            korraSampler.Init(CC);
+            korraSampler.Init(context);
 
             cognitiveDist = new JoiDistributions();
             //cache values
@@ -106,7 +104,7 @@ namespace Companion.KorraAI.Models.Joi
         public ModelContext GetContext()
         {
             if (!isInitialized) SharedHelper.LogError("Not initialized.");
-            return CC;
+            return context;
         }
 
         public bool ModelUpdate(TimeSpan timeSinceStart)
@@ -116,6 +114,8 @@ namespace Companion.KorraAI.Models.Joi
             bool stateChange = false;
 
             #region Update Actions
+
+            //After 15 minutes we start asking less questions about the user. The reasoning is that the introduction phase has finished.
 
             if (timeSinceStart.TotalMinutes > MinutesDecreaseAskPureFactQuestionAboutUser && !DecreaseDistributionOfAskPureFactQuestionAboutUserDone)
             {
@@ -132,13 +132,13 @@ namespace Companion.KorraAI.Models.Joi
                 }
             }
 
-            //regeneration occurred and there are no pure facts then MakeSuggestion is high/default, otherwise we keep it down
+            //Regeneration occurred and there are no pure facts then MakeSuggestion is high/default, otherwise we keep it down
             if (KorraAISampler.PureFactsAboutUserLeft().Length == 0 && KorraAISampler.PureFactsAboutBotLeft().Length == 0)
                 ProbVariables.Bot.PrMakeSuggestion[(int)PV.Current] = ProbVariables.Bot.PrMakeSuggestion[(int)PV.Default];
             else
-            {   //some pure facts were left unanswered
-                //if the chance for the PrAskPureFactQuestionAboutUser is too low, we will not 
-                //select these items and switch back to higher PrMakeSuggestion
+            {   //Some pure facts were left unanswered
+                //If the probability for the PrAskPureFactQuestionAboutUser is too low, we will not 
+                //be able to select these items and switch back to higher PrMakeSuggestion
                 if (ProbVariables.Bot.PrAskPureFactQuestionAboutUser[(int)PV.Current].Value != ProbVariables.Bot.PrAskPureFactQuestionAboutUser[(int)PV.Descreased].Value)
                     ProbVariables.Bot.PrMakeSuggestion[(int)PV.Current] = ProbVariables.Bot.PrMakeSuggestion[(int)PV.Descreased];
             }
@@ -147,44 +147,42 @@ namespace Companion.KorraAI.Models.Joi
 
             #region Update suggestions
 
-            //TODO: program WatchedMovieYesterday, AlreadyWatchedMovieToday, IsWeatherForecastGood
+            #region weather update example
+            //currently not fully implemented as weather is not automatically retrieved from Internet
 
-            //TODO: adjust movies suggestion based if the user works and the work hours
-
-            #region weather
             //if (Sates.IsWeatherForecastGood)
-            //    ProbVariables.TellWeatherForecast = BernoulliF(Prob(0.9));
-            //else
-            //ProbVariables.TellWeatherForecast = from igm in ProbVariables.InAGoodMood
-            //                                    from twf in BernoulliF(Prob(igm ? 0.4 : 0.7)) //if in a good mood and
-            //                                    select twf;
+            //    ProbVariables.Bot.TellWeatherForecast = BernoulliF(Prob(0.9)); //we should always tell a good weather
+            //else //not a good weather
+            //    ProbVariables.Bot.TellWeatherForecast = from igm in ProbVariables.User.InAGoodMood
+            //                                        from twf in BernoulliF(Prob(igm ? 0.4 : 0.7)) //if in a good mood then put 0.4 chance of telling the weather
+            //                                        select twf;
             #endregion
 
-            #region adjust movies
+            #region adjust distribution over movies suggestions
             PureFact factJob = PureFacts.GetFacfByName("UserHasJob");
             PureFact factWatchedMovieYesterday = PureFacts.GetFacfByName("UserMovieYesterday");
 
             var oldSuggestToWatchMovie = SharedHelper.GetProb(ProbVariables.Bot.SuggestToWatchMovie).Value;
 
             //no job: suggest during the entire day 0.18, more time means more movie suggestions
-            if ((factJob.IsAnswered && CC.Phrases.IsNo(factJob.Value)) || StatesShared.IsWeekend)
+            if ((factJob.IsAnswered && context.Phrases.IsNo(factJob.Value)) || StatesShared.IsWeekend)
             {
                 ProbVariables.Bot.SuggestToWatchMovie = BernoulliF(Prob(0.18));
                 //KorraBaseHelper.Log("Prob SuggestToWatchMovie changed to: 0.18, no job or weekend");
             }
-            else if (factJob.IsAnswered && CC.Phrases.IsYes(factJob.Value)) //has job
+            else if (factJob.IsAnswered && context.Phrases.IsYes(factJob.Value)) //has job
             {
                 #region working and evening
                 if (StatesShared.IsEvening /*TODO: or after work hours*/)
                 {
                     //has NOT watched movie yesterday (is working and evening)
-                    if (factWatchedMovieYesterday.IsAnswered && CC.Phrases.IsNo(factJob.Value))
+                    if (factWatchedMovieYesterday.IsAnswered && context.Phrases.IsNo(factJob.Value))
                     {
                         ProbVariables.Bot.SuggestToWatchMovie = BernoulliF(Prob(0.18));
                         //KorraBaseHelper.Log("Prob SuggestToWatchMovie changed to: 0.18, evening");
                     }
                     //has watched movie yesterday (is working and evening)
-                    else if (factWatchedMovieYesterday.IsAnswered && CC.Phrases.IsYes(factJob.Value))
+                    else if (factWatchedMovieYesterday.IsAnswered && context.Phrases.IsYes(factJob.Value))
                     {
                         ProbVariables.Bot.SuggestToWatchMovie = BernoulliF(Prob(0.12));
                         // KorraBaseHelper.Log("Prob SuggestToWatchMovie changed to: 0.12. Watched movie yesterday.");
@@ -210,13 +208,15 @@ namespace Companion.KorraAI.Models.Joi
 
             #endregion
 
-            #region adjust sport
-            //PureFact factSport = PureFacts.GetFacfByName("UserDoesSport");
-            //if (factSport.IsAnswered && Phrases.IsNo(factSport.Value))
-            //{
-            //    ProbVariables.SuggestGoToGym = BernoulliF(Prob(0.15));
-            //    UnityEngine.Debug.LogWarning("Prob SuggestGoToGym changed from 0.10 to 0.15, no sport done by user");
-            //}
+            #region adjust sport suggestions
+            PureFact factSport = PureFacts.GetFacfByName("UserDoesSport");
+            //If one is not doing any sport, he should be encouraged to do so:
+            if (factSport.IsAnswered && context.Phrases.IsNo(factSport.Value))
+            {
+                double oldProb = SharedHelper.GetProb(ProbVariables.Bot.SuggestGoToGym).Value;
+                ProbVariables.Bot.SuggestGoToGym = BernoulliF(Prob(0.15));
+                UnityEngine.Debug.LogWarning("Prob SuggestGoToGym changed from " + oldProb + " to " + SharedHelper.GetProb(ProbVariables.Bot.SuggestGoToGym).Value);
+            }
             #endregion
 
             #endregion

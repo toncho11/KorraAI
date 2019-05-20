@@ -50,7 +50,7 @@ namespace Companion.KorraAI.Models
             public static Prob PrSuggestListenToSong = Prob(0.35);
 
             //updatable 
-            public static FiniteDist<bool> SuggestGoToGym = BernoulliF(Prob(0.1));
+            public static FiniteDist<bool> SuggestGoToGym = BernoulliF(Prob(0.10));
 
             //updatable
             public static FiniteDist<bool> TellWeatherForecast = BernoulliF(Prob(0.05)); //currently not used
