@@ -1,6 +1,6 @@
 # KorraAI
 
-Is a framework that allows you to create your own bot, also called Embodied Conversational Agent (ECA). It uses distributions and probabilisitic programming to encode behavior and unexpected flow of events. The currently enoded bot is called Joi, a female one. Probabilsitic programming is a way to encode Bayes networks. Otherwise said it is a way to manage uncertain concepts. 
+KorraAI is a bot framework that allows you to create your own bot, also called Embodied Conversational Agent (ECA). It uses distributions and probabilisitic programming to encode behavior and unexpected flow of events. The currently enoded bot is called Joi, a female one. Probabilsitic programming is a way to encode Bayes networks. Otherwise said it is a way to manage uncertain concepts. 
 
 You can learn more about the design principles in [Philosophy](../../wiki/Philosophy).
 
