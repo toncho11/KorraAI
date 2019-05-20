@@ -15,7 +15,7 @@ Time is also encoded as distributions and not fixed intervals. For example we ca
 Next it is recommended that you jump to [Tutorial](../../wiki/Tutorial).
 
 **Cognitive and physical cabilties:**
-The bot is programmed in Unity and comes with a quality 3D model, voice synthesis, lips sync, simple bot movement, eye movements and blinks, voice annotation, at least 6 cloth outfits and other that make it look human-like. No voice recognition is currently included. Interaction with the bot is done with mouse and keyboard.
+The bot is programmed in Unity and comes with a quality 3D model, voice synthesis, lips sync, simple bot movement, eye movements and blinks, voice annotation, at least 6 cloth outfits and other that make it look human-like. No voice recognition is currently included. Interaction with the bot is done with mouse and keyboard. The bot is also non-blocking, which means that if you do not answer a question the bot will not wait forever, it will either react to your lack of response or switch to the next interaction.
 
 See more in [Examples](../../wiki/Examples). Text is also submitted to randomization, so that not the same phrase is used each time.
 
