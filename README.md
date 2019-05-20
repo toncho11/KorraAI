@@ -1,6 +1,6 @@
 # KorraAI
 
-KorraAI is a bot framework that allows you to create your own bot, also called Embodied Conversational Agent (ECA). The programming language used is C#. It uses distributions and probabilisitic programming to encode behavior and unexpected flow of events. The currently enoded bot (aslo called "model") is called Joi, a female one. Probabilsitic programming is a way to encode Bayes networks. Otherwise said it is a way to manage uncertain concepts. 
+KorraAI is a bot framework that allows you to create your own bot, also called Embodied Conversational Agent (ECA). The programming language used is C#. It uses distributions and probabilisitic programming to encode behavior and unexpected flow of events. The currently enoded bot (aslo called "model") is called Joi, a female one. Probabilsitic programming is a way to encode Bayes networks. Otherwise said it is a way to manage uncertain concepts. KorraAI is plugin based where a plugin provides one or several models with each corresponding to a adifferent bot.
 
 You can learn more about the design principles in [Philosophy](../../wiki/Philosophy) and the techical aspects in [TechnicalSpec](../../wiki/TechnicalSpec).
 
