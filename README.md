@@ -23,8 +23,10 @@ KorraAI bots can be used in video games and for the conduct of psychological exp
 
 Possible commercial applications:
 
+- Sales agent
 - TV presenter
 - Entertainer
-- Sales agent
+- Companion
+
 
 [Installation](../../wiki/Installation)
