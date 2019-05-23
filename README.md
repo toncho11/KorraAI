@@ -19,6 +19,10 @@ Next it is recommended that you jump to [Tutorial](../../wiki/Tutorial).
 The bot is programmed in Unity and comes with a quality 3D model, voice synthesis, lips sync, simple bot movement, eye movements and blinks, voice annotation, at least 6 cloth outfits and other that make it look human-like. No voice recognition is currently included. Interaction with the bot is done with mouse and keyboard. The bot is also non-blocking, which means that if you do not answer a question the bot will not wait forever, it will either react to your lack of response or switch to the next interaction.
 
 **Application:**
+KorraAI bots can be used in video games and for the conduct of psychological experiments. For example one can try to encode specific behavior and then validate: how successful was the encoding or what are the effects of this behavior on human subjects.
+
+Possible commercial applications:
+
 - TV presenter
 - Entertainer
 - Sales agent
