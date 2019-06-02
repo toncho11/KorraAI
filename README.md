@@ -7,7 +7,7 @@ You can learn more about the design principles in [Philosophy](../../wiki/Philos
 *Yes, you can encode a girlfriend! :)*  
 
 **Example 1:**
-The probability of saying a joke can depend on a base joke probability (that describes the overall character of the bot) and the moood of the user. This is a simple Bayes network of three variables. For example a bad mood can indicate that it is better that the bot says more jokes (to improve the mood the interlocutor). So if the user has indicated a bad mood we can infer a higher chance of saying a joke, for example 10 jokes per hour in comparison to 7 jokes per hour, if he declared at some point that he was in a good mood.
+The probability of saying a joke can depend on a base joke probability (that describes the overall character of the bot) and the mood of the user. This is a simple Bayes network of three variables. For example a bad mood can indicate that it is better that the bot says more jokes (to improve the mood the interlocutor). So if the user has indicated a bad mood we can infer a higher chance of saying a joke, for example 10 jokes per hour in comparison to 7 jokes per hour, if he declared at some point that he was in a good mood.
 
 **Example 2:**
 Time is also encoded as distributions and not fixed intervals. For example we can reduce the time between interactions, but not by a fixed amount. We do that by changing the parameters of the distribution (ex. Normal(m,n) distribution) so that the pauses between interactions are centered for example around 2.1 seconds and not 3.1 seconds. This will make the bot more interactive and choosing the right value depends on the psychological effect you would like to encode.
