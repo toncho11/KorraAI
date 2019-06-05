@@ -15,7 +15,7 @@ Time is also encoded as distributions and not fixed intervals. For example we ca
 You need to go through the following in order to understand how the framework works:
 - [Tutorial](../../wiki/Tutorial)
 - [Adding a concept](../../wiki/Add-concept)
-- [Probabilistic Examples](../../wiki/Examples)
+- [Probabilistic Examples](../../wiki/Probabilistic-Examples)
 
 **Cognitive and physical capabilities:**
 The bot is programmed in Unity and comes with a quality 3D model, voice synthesis, lips sync, simple bot movement, eye movements and blinks, voice annotation, at least 6 cloth outfits and other that make it look human-like. No voice recognition is currently included. Interaction with the bot is done with mouse and keyboard. The bot is also non-blocking, which means that if you do not answer a question the bot will not wait forever, it will either react to your lack of response or switch to the next interaction.
