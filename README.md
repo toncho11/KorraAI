@@ -14,7 +14,7 @@ Time is also encoded as distributions and not fixed intervals. For example we ca
 
 You need to go through the following in order to understand how the framework works:
 - [Tutorial](../../wiki/Tutorial)
-- [Adding a concept](../../wiki/Add-concept)
+- [Adding a concept](../../wiki/Add-a-concept)
 - [Probabilistic Examples](../../wiki/Probabilistic-Examples)
 
 **Cognitive and physical capabilities:**
