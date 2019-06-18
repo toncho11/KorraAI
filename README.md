@@ -8,8 +8,8 @@ You can learn more about the design principles in [Philosophy](../../wiki/Philos
 
 Advantages of using KorraAI:
 
-* Being proacvtive by design, the bot will continuesly initiate interaction in distribution ontrolled manner
-* Comes with Probabilisitic Programming library that allows for distributions and Bayesian network encoding
+* Being proacvtive by design, the bot will continuesly initiate interaction in distribution controlled manner
+* Comes with Probabilisitic Programming library that allows for distributions and Bayesian networks encoding of concepts from real-life
 * Behavior change can be encoded based on elpased time or external factors, user responses, etc.
 
 * Has quality 3D model, voice synthesis, lips sync, simple bot movement, eye movements and blinks, voice annotation
