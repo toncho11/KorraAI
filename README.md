@@ -9,7 +9,7 @@ Advantages of using KorraAI:
 * Being proacvtive by design, the bot will continuesly initiate interaction in distribution controlled manner
 * Comes with Probabilisitic Programming library that allows for distributions and Bayesian networks encoding of concepts from real-life
 * Behavior change can be encoded based on elpased time or external factors, user responses, etc.
-* Has a quality 3D model, voice synthesis, lips sync, simple bot movement, eye movements and blinks, voice annotation
+* Has a quality 3D model, voice synthesis, lips sync, bot movement animation, eye movements and blinks, voice annotation (SSML)
 * The result is a Unity 3D application that can be executed on many platforms
 * It is plugin based, so some of the techical aspects are hidden for the sake of simplicity, so you can focus on modelling
 
