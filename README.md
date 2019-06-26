@@ -15,6 +15,7 @@ Advantages of using KorraAI:
 
 In order to start coding for KorraAI you need to go through the following pages:
 
+*  [Architecture](../../wiki/Architecture)
 *  [Tutorial](../../wiki/Tutorial)
 *  [KorraAIModel class](../../wiki/KorraAIModel-class)
 *  [Add a concept](../../wiki/Add-a-concept)
