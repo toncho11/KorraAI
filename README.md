@@ -6,14 +6,14 @@ KorraAI is a framework that allows you to create your own bot, also called Embod
 
 Advantages of using KorraAI:
 
-* Being proacvtive by design, the bot will continuesly initiate interaction in distribution controlled manner
-* Comes with Probabilisitic Programming library that allows for distributions and Bayesian networks encoding of concepts from real-life
+* Being proacvtive by design, the bot will continuously initiate interaction in a distribution controlled manner
+* Comes with [Probabilisitic Programming library](https://github.com/joashc/csharp-probability-monad) that allows for encoding of distributions and Bayesian networks that represent concepts from real-life
 * Behavior change can be encoded based on elpased time or external factors, user responses, etc.
 * Has a quality 3D model, voice synthesis, lips sync, bot movement animation, eye movements and blinks, voice annotation (SSML)
 * The result is a Unity 3D application that can be executed on many platforms
-* It is plugin based, so some of the techical aspects are hidden for the sake of simplicity, so you can focus on modelling
+* It is plugin based, so some of the technical aspects are hidden for the sake of simplicity, so you can focus on modelling
 
-In order to start coding for KorraAI you need to go through these pages:
+In order to start coding for KorraAI you need to go through the following pages:
 
 *  [Tutorial](../../wiki/Tutorial)
 *  [KorraAIModel class](../../wiki/KorraAIModel-class)
@@ -26,14 +26,13 @@ And also:
 *  [Adjust when a category runs out of items](../../wiki/Planning-and-running-out-of-items)
 
 **Application:**
-KorraAI bots can be used in video games and for the conduct of psychological experiments. For example one can try to encode specific behavior and then validate: how successful was the encoding or what are the effects of this behavior on human subjects.
 
-Possible commercial applications:
-
+- A character in a video game
 - Sales agent
 - TV presenter
 - Entertainer
 - Companion
+- Psychological experiments
 
 
 [Installation](../../wiki/Installation)
