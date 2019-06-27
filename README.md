@@ -6,7 +6,7 @@ KorraAI is a framework that allows you to create your own bot, also called Embod
 
 Advantages of using KorraAI:
 
-* Being proacvtive by design, the bot will continuously initiate interaction in a distribution controlled manner
+* Being proactive by design, the bot will continuously initiate interaction in a distribution controlled manner
 * Comes with [Probabilistic Programming library](https://github.com/joashc/csharp-probability-monad) that allows for encoding of distributions and Bayesian networks that represent concepts from real-life
 * Behavior change can be encoded based on elpased time or external factors, user responses, etc.
 * Has a quality 3D model, voice synthesis, lips sync, bot movement animation, eye movements and blinks, voice annotation (SSML)
