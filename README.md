@@ -14,6 +14,7 @@ Advantages of using KorraAI:
 * Has a quality 3D model, voice synthesis, lips sync, bot movement animation, eye movements and blinks, voice annotation (SSML)
 * The result is a Unity 3D application that can be executed on many platforms
 * It is plugin based, so some of the technical aspects are hidden for the sake of simplicity, so you can focus on modelling
+* The Korra AI can be the base of your own bot framework where NLP, semantic web, etc are added
 
 In order to start coding for KorraAI you need to go through the following pages:
 
