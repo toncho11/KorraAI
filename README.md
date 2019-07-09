@@ -2,7 +2,7 @@
 
 ![](../../blob/master/Images/Joi1.png?raw=true)
 
-KorraAI is a framework that allows you to create your own bot, also called Embodied Conversational Agent ([ECA](https://en.wikipedia.org/wiki/Embodied_agent)). You can learn more about the design principles in [Philosophy](../../wiki/Philosophy) and the technical aspects in [TechnicalSpec](../../wiki/TechnicalSpec).
+KorraAI is a framework that allows you to create your own bot, also called Embodied Conversational Agent ([ECA](https://en.wikipedia.org/wiki/Embodied_agent)). You can learn more about the design principles in [Architecture](../../wiki/Architecture) and [Philosophy](../../wiki/Philosophy) and the technical aspects in [TechnicalSpec](../../wiki/TechnicalSpec).
 
 *Yes, you can encode a girlfriend! :)*
 
