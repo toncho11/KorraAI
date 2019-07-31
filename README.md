@@ -4,7 +4,7 @@
 
 KorraAI is a framework that allows you to create your own bot, also called Embodied Conversational Agent ([ECA](https://en.wikipedia.org/wiki/Embodied_agent)). You can learn more about the design principles in [Architecture](../../wiki/Architecture) and [Philosophy](../../wiki/Philosophy) and the technical aspects in [TechnicalSpec](../../wiki/TechnicalSpec).
 
-Demo: [https://alucard321.itch.io/companion](https://alucard321.itch.io/companion)
+[Demo Windows x64](https://alucard321.itch.io/companion)
 
 Advantages of using KorraAI:
 
