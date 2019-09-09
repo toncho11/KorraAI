@@ -215,7 +215,6 @@ namespace Companion.KorraAI.Models.Joi
             {
                 double oldProb = SharedHelper.GetProb(ProbVariables.Bot.SuggestGoToGym).Value;
                 ProbVariables.Bot.SuggestGoToGym = BernoulliF(Prob(0.15));
-                UnityEngine.Debug.LogWarning("Prob SuggestGoToGym changed from " + oldProb + " to " + SharedHelper.GetProb(ProbVariables.Bot.SuggestGoToGym).Value);
             }
             #endregion
 
