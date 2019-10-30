@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mxfile host="www.draw.io" modified="2019-10-30T14:02:13.507Z" agent="Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36" etag="JsgJOZU2c9RKU0U5tovF" version="12.1.8" type="device" pages="1">
+<mxfile host="www.draw.io" modified="2019-10-30T14:14:56.593Z" agent="Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36" etag="CIAeAps-KWg900WyOas5" version="12.1.8" type="device" pages="1">
   <diagram id="0TjkNDiTc3e0C1x_zHAB" name="Page-1">
     <mxGraphModel dx="1422" dy="865" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="0" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
@@ -30,7 +30,7 @@
         <mxCell id="JlMRW8M9gR_sIlvLuQEZ-12" value="Reaction to user&#39;s response" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="400" y="360" width="80" height="60" as="geometry"/>
         </mxCell>
-        <mxCell id="JlMRW8M9gR_sIlvLuQEZ-13" value="Update of Probabilistic &lt;br&gt;variables" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="JlMRW8M9gR_sIlvLuQEZ-13" value="Update of&lt;br&gt;probabilistic &lt;br&gt;variables" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="490" y="360" width="80" height="60" as="geometry"/>
         </mxCell>
         <mxCell id="JlMRW8M9gR_sIlvLuQEZ-14" value="Is re-sampling required?" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
@@ -187,7 +187,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="JlMRW8M9gR_sIlvLuQEZ-50" value="Speech Adjustments" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="JlMRW8M9gR_sIlvLuQEZ-50" value="Speech adjustments" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="340" y="591" width="70" height="49" as="geometry"/>
         </mxCell>
         <mxCell id="JlMRW8M9gR_sIlvLuQEZ-52" value="" style="endArrow=classic;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="JlMRW8M9gR_sIlvLuQEZ-50" target="JlMRW8M9gR_sIlvLuQEZ-8">
@@ -212,6 +212,16 @@
           <mxGeometry width="50" height="50" relative="1" as="geometry">
             <mxPoint x="320" y="370" as="sourcePoint"/>
             <mxPoint x="320" y="320" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="JlMRW8M9gR_sIlvLuQEZ-61" value="" style="edgeStyle=elbowEdgeStyle;elbow=horizontal;endArrow=classic;html=1;exitX=0.267;exitY=0.025;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="JlMRW8M9gR_sIlvLuQEZ-10">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="200" y="770" as="sourcePoint"/>
+            <mxPoint x="400" y="450" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="426" y="470"/>
+              <mxPoint x="400" y="460"/>
+            </Array>
           </mxGeometry>
         </mxCell>
       </root>
