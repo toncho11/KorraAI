@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KorraAI", "KorraAI\KorraAI.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KorraAIShared", "KorraAIShared\KorraAIShared.csproj", "{668767F6-BD68-449A-907D-499CFE78BC02}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InferenceTest", "InferenceTesting\InferenceTest.csproj", "{FFD182AA-2927-4215-931C-5D646A59F1D6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,6 +26,10 @@ Global
 		{668767F6-BD68-449A-907D-499CFE78BC02}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{668767F6-BD68-449A-907D-499CFE78BC02}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{668767F6-BD68-449A-907D-499CFE78BC02}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FFD182AA-2927-4215-931C-5D646A59F1D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FFD182AA-2927-4215-931C-5D646A59F1D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FFD182AA-2927-4215-931C-5D646A59F1D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FFD182AA-2927-4215-931C-5D646A59F1D6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
