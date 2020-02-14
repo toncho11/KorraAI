@@ -15,7 +15,7 @@ namespace Companion
         /// <summary>
         /// Does the bot memorizes used items (certain)
         /// </summary>
-        public static bool EnablePersistentData = true;
+        public static bool EnablePersistentData = false;
 
         public static int DefaultOutfitIndex = 1; //starts from 1
 
@@ -27,9 +27,11 @@ namespace Companion
 
         public static int DefaultSmile = 0; //0,1
 
-        public static int MinimumJokesBeforeAllowingDelayedJokes = 8;
+        public static int MinimumJokesBeforeAllowingDelayedJokes = 8; //not used
 
-        public static bool ForceClearPesistentDataOnStart = false;
+        public static bool ForceClearPesistentDataOnStart = false; //false at release
+
+        public static bool ApplyPolicyToFactLoading = true;
 
     }
 }

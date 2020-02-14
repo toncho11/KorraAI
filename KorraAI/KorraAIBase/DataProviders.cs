@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using static ProbCSharp.ProbBase;
+using ProbCSharp;
+
 namespace Companion.KorraAI
 {
     public static class JokesProvider
@@ -11,7 +14,7 @@ namespace Companion.KorraAI
         static List<Joke> jokes = new List<Joke>();
         static System.Random r = new System.Random();
 
-        private static int CountJokesPlanned;
+        //private static int CountJokesPlanned;
 
         public static void AddJoke(Joke joke)
         {
@@ -25,31 +28,15 @@ namespace Companion.KorraAI
 
         public static Joke GetJoke()
         {
-            Joke[] q = null;
+            var allJokes = (from joke in GetAll()
+                            where joke.IsUsed == false && joke.IsPlanned == false
+                            select joke).ToArray();
 
-            //warning: there should be enough non-delayed jokes, otherwise all jokes will be blocked
-            
-            //if possible use the non-delayed jokes
-            if ((StatesShared.ActualJokesProvided + CountJokesPlanned) <= BotConfigShared.MinimumJokesBeforeAllowingDelayedJokes) //less than 9 jokes, do not use delayed jokes
-            {
-                q = jokes.Where(j => j.IsUsed == false && j.IsPlanned == false && j.IsDelayedJoke == false).ToArray(); //do not use delayed jojes in the beginning
-            }
-
-            if (q == null || (q!=null && q.Length==0))
-            {
-                q = jokes.Where(j => j.IsUsed == false && j.IsPlanned == false).ToArray(); //use all jokes delayed / not delayed
-            }
-
-            if (q.Length > 0)
-            {
-                Joke joke = q.ElementAt(r.Next(0, q.Count()));
-
-                CountJokesPlanned = CountJokesPlanned + 1;
-
-                return joke;
-            }
+            if (allJokes.Count() > 0)
+                return allJokes[r.Next(allJokes.Count())];
             else return null;
         }
+
 
         public static Joke GetJokeByName(string Name) //by ID
         {
@@ -60,7 +47,7 @@ namespace Companion.KorraAI
 
         public static void RemovePlannedFlagForAllJokes()
         {
-            CountJokesPlanned = 0;
+            //CountJokesPlanned = 0;
 
             for (int i = 0; i < jokes.Count; i++)
             {
@@ -84,7 +71,7 @@ namespace Companion.KorraAI
                 }
             }
 
-            SharedHelper.LogError("Joke '"+Name+"' not found in SetJokeAsUsed!");
+            SharedHelper.LogError("Joke '" + Name + "' not found in SetJokeAsUsed!");
         }
 
         public static string[] GetJokesIDsAlreadyUsed()
@@ -99,6 +86,13 @@ namespace Companion.KorraAI
             var list = jokes.Select(s => s.Name).Distinct().ToArray();
             return jokes.Count == list.Length;
         }
+
+        public static Joke[] GetAll()
+        {
+            return jokes.ToArray();
+        }
+
+
     }
 
     public static class SongsProvider
@@ -107,7 +101,7 @@ namespace Companion.KorraAI
         static System.Random r = new System.Random();
 
         public static void AddSong(Song song)
-        { 
+        {
             songs.Add(song);
         }
 
@@ -131,8 +125,8 @@ namespace Companion.KorraAI
             if (q.Length == 0)
             {
                 SharedHelper.LogError("Song " + Name + " not found in GetSongByName!");
-                return (songs.Count >0) ? songs[0] : null; //return first available song
-            } 
+                return (songs.Count > 0) ? songs[0] : null; //return first available song
+            }
             else if (q.Length > 1)
             {
                 SharedHelper.LogError("Song " + Name + " has a duplicate in GetSongByName!");
@@ -163,8 +157,33 @@ namespace Companion.KorraAI
                 }
             }
 
-            SharedHelper.LogError("Song '"+ Name +"' not found in SetSongAsUsed!");
+            SharedHelper.LogError("Song '" + Name + "' not found in SetSongAsUsed!");
         }
+
+        public static void SetSongAsPlanned(string Name, bool value)
+        {
+            for (int i = 0; i < songs.Count; i++)
+            {
+                if (songs[i].Name == Name)
+                {
+                    songs[i].IsPlanned = value;
+
+                    if (value)
+                        SharedHelper.Log("Song '" + Name + "' is set to planned.");
+                    else SharedHelper.Log("Song '" + Name + "' is set to NOT planned.");
+
+                    return;
+                }
+            }
+
+            SharedHelper.LogError("Song '" + Name + "' not found in SetSongAsUsed!");
+        }
+
+        public static Song[] GetAll()
+        {
+            return songs.ToArray();
+        }
+
     }
 
     public static class SportsProvider
@@ -174,7 +193,7 @@ namespace Companion.KorraAI
 
         static SportsProvider()
         {
-           
+
         }
 
         public static void AddSport(Sport sport)
@@ -226,7 +245,12 @@ namespace Companion.KorraAI
                 }
             }
 
-            SharedHelper.LogError("Sport "+Name+" not found in SetMovieAsUsed!");
+            SharedHelper.LogError("Sport " + Name + " not found in SetMovieAsUsed!");
+        }
+
+        public static Sport[] GetAll()
+        {
+            return sports.ToArray();
         }
     }
 
@@ -287,7 +311,7 @@ namespace Companion.KorraAI
                 }
             }
 
-            SharedHelper.LogError("Movie '"+ Name +"' not found in SetMovieAsUsed!");
+            SharedHelper.LogError("Movie '" + Name + "' not found in SetMovieAsUsed!");
         }
 
         public static string[] GetMoviesIDsAlreadyUsed()
@@ -296,6 +320,11 @@ namespace Companion.KorraAI
                     where movie.IsUsed == true
                     select movie.Name).ToArray();
         }
+        public static Movie[] GetAll()
+        {
+            return movies.ToArray();
+        }
+
 
     }
 
@@ -359,7 +388,14 @@ namespace Companion.KorraAI
                 }
             }
 
-            SharedHelper.LogError("Buy '"+ Name +"' not found in SetBuyAsUsed!");
+            SharedHelper.LogError("Buy '" + Name + "' not found in SetBuyAsUsed!");
+        }
+
+        public static Buy GetBuyByName(string Name) //by ID
+        {
+            var q = allbuys.Where(j => j.Name == Name).SingleOrDefault();
+
+            return q;
         }
     }
 }

@@ -7,7 +7,10 @@ using System.Threading.Tasks;
 
 namespace Companion.KorraAI
 {
-    public class UncertainFact
+    /// <summary>
+    /// Uncertain fact is a concept that has sone degree of being true. Examples are physical and mental states: being tired, being happy, etc.
+    /// </summary>
+    public class UncertainFact : Item
     {
         double[] probabilitiesForEachPossibleAnswer;
 
@@ -45,7 +48,7 @@ namespace Companion.KorraAI
             RecalculateProbForEachAnswer();
         }
 
-        public string Name = "";
+        //public string Name { get; set; }
 
         public bool IsFactAboutTheBot = false;
 
@@ -85,7 +88,6 @@ namespace Companion.KorraAI
         #endregion
 
         #region When to ask the question again
-        public bool IsUsed = false;
 
         public float TimeOutSeconds;
 

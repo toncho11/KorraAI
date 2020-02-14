@@ -12,12 +12,13 @@ namespace Companion.KorraAI.Models.Joi
 {
     public class JoiModel : IKorraAIModel
     {
-        bool DecreaseDistributionOfAskPureFactQuestionAboutUserDone;
+        bool RomanticJokesFirst = false;
+        bool RomanticJokesLast = true;
 
         /// <summary>
-        /// After how many minutes to decrease the distribution for AskPureFactQuestionAboutUser
+        /// After how many minutes to increase the music suggestions
         /// </summary>
-        int MinutesDecreaseAskPureFactQuestionAboutUser = 15; //default 15;
+        readonly int MinutesIncreaseMusic = 15; //default 15;
 
         KorraAISampler korraSampler;
 
@@ -28,6 +29,8 @@ namespace Companion.KorraAI.Models.Joi
         bool isInitialized = false;
 
         ModelContext context;
+
+        IModelTrigger[] ModelTriggers;
 
         public string Name
         {
@@ -41,12 +44,20 @@ namespace Companion.KorraAI.Models.Joi
         {
             get
             {
-                return "1.0";
+                return "1.3";
             }
         }
 
         public void Init()
         {
+            #region Configure character
+
+            Personality.UseMildOffensiveJokes = true;
+            Personality.UseMildSexualThemes = true;
+            Personality.UseRomanticReferences = true;
+
+            #endregion
+
             context = new ModelContext();
 
             if (BotConfigShared.Language == Lang.EN)
@@ -57,28 +68,45 @@ namespace Companion.KorraAI.Models.Joi
 
                 context.SpeechAdaptation = new SpeechAdaptationEN();
             }
+            //else
+            //if (BotConfigShared.Language == Lang.FR)
+            //{
+            //    context.Phrases = new PhrasesFR();
+
+            //    context.Items = new ItemsFR();
+
+            //    context.SpeechAdaptation = new SpeechAdaptationFR();
+            //}
             else
             {
-                //if (BotConfig.Language == Lang.JA)
-                //{
-                //    CC.Phrases = new PhrasesJP();
-
-                //    CC.Items = new ItemsJP();
-
-                //    CC.SpeechAdaptation = new SpeechAdaptationJP();
-                //}
+                SharedHelper.LogError("Language pack not found.");
             }
 
             context.Items.LoadAll(context.Phrases);
 
-            korraSampler = new KorraAISampler();
-            korraSampler.Init(context);
-
             cognitiveDist = new JoiDistributions();
+
+            ModelTriggers = new IModelTrigger[]
+            {
+                new MusicModelUpdateTrigger(MinutesIncreaseMusic),
+                new MoviesModelUpdateTrigger(),
+                new VideoGameSurpriseTrigger(),
+            };
+
+            RomanticJokesFirst = true;
+            RomanticJokesLast = false;
+
+            korraSampler = new KorraAISampler();
+            korraSampler.Init(context, AdjustProbVariablesDuringPlanning, GetItem);
+
+            //Delayed. These Uncertain Facts questions are automatically re-enabled after a certain period of time
+            UncertainFacts.SetAsUsed("UserIsTired");
+            UncertainFacts.SetAsUsed("UserGoodMood");
+
             //cache values
             cognitiveDist.NextSmilePauseTime();
             cognitiveDist.NextTimeDurationEyesStayFocusedOnCameraAfterStartedTalking();
-            cognitiveDist.GetNextInteactionPause();
+            cognitiveDist.GetNextInteactionPause(false);
             cognitiveDist.NextQuestionTimeout();
 
             isInitialized = true;
@@ -107,132 +135,259 @@ namespace Companion.KorraAI.Models.Joi
             return context;
         }
 
-        public bool ModelUpdate(TimeSpan timeSinceStart)
+        public IModelTrigger[] GetModelTriggers
+        {
+            get
+            {
+                if (!isInitialized) SharedHelper.LogError("Not initialized.");
+                return ModelTriggers;
+            }
+        }
+
+        public bool ModelUpdate(TimeSpan timeSinceStart, bool isPureFactUpdated, bool isUncertainFactUpdated)
         {
             if (!isInitialized) SharedHelper.LogError("Not initialized.");
 
-            bool stateChange = false;
+            bool regenerationRequested = false;
 
-            #region Update Actions
-
-            //After 15 minutes we start asking less questions about the user. The reasoning is that the introduction phase has finished.
-
-            if (timeSinceStart.TotalMinutes > MinutesDecreaseAskPureFactQuestionAboutUser && !DecreaseDistributionOfAskPureFactQuestionAboutUserDone)
+            //Execute triggers that perform inference and update probabilistic variables 
+            foreach (var trigger in ModelTriggers)
             {
-                bool thereAreUnAnsweredQuestionsAboutUser = KorraAISampler.PureFactsAboutUserLeft().Length > 0;
-                if (thereAreUnAnsweredQuestionsAboutUser)
+                int oldExecuteCount = trigger.TriggeredCount;
+
+                if (
+                       (trigger is IModelUpdateTrigger)
+                       &&
+                       (
+                         (trigger.IsTimeBased || (isPureFactUpdated && trigger.IsUserResponseBased))
+                         &&
+                         ((trigger.IsOneTimeTrigger && trigger.TriggeredCount == 0) || !trigger.IsOneTimeTrigger)
+
+                       )
+                   )
                 {
-                    DecreaseDistributionOfAskPureFactQuestionAboutUserDone = true;
+                    //Updating model
+                    regenerationRequested = ((IModelUpdateTrigger)trigger).Process(isPureFactUpdated, timeSinceStart, this);
 
-                    ProbVariables.Bot.PrAskPureFactQuestionAboutUser[(int)PV.Current] = ProbVariables.Bot.PrAskPureFactQuestionAboutUser[(int)PV.Descreased];
-
-                    SharedHelper.LogWarning("Prob AskPureFactQuestionAboutUser changed to: " + ProbVariables.Bot.PrAskPureFactQuestionAboutUser[(int)PV.Current].Value);
-
-                    stateChange = true;
+                    if (trigger.TriggeredCount > oldExecuteCount)
+                        SharedHelper.Log("Trigger executed: '" + trigger.ToString() + "'");
                 }
             }
 
-            //Regeneration occurred and there are no pure facts then MakeSuggestion is high/default, otherwise we keep it down
-            if (KorraAISampler.PureFactsAboutUserLeft().Length == 0 && KorraAISampler.PureFactsAboutBotLeft().Length == 0)
-                ProbVariables.Bot.PrMakeSuggestion[(int)PV.Current] = ProbVariables.Bot.PrMakeSuggestion[(int)PV.Default];
-            else
-            {   //Some pure facts were left unanswered
-                //If the probability for the PrAskPureFactQuestionAboutUser is too low, we will not 
-                //be able to select these items and switch back to higher PrMakeSuggestion
-                if (ProbVariables.Bot.PrAskPureFactQuestionAboutUser[(int)PV.Current].Value != ProbVariables.Bot.PrAskPureFactQuestionAboutUser[(int)PV.Descreased].Value)
-                    ProbVariables.Bot.PrMakeSuggestion[(int)PV.Current] = ProbVariables.Bot.PrMakeSuggestion[(int)PV.Descreased];
-            }
+            if (isUncertainFactUpdated)
+                regenerationRequested = true;
 
-            #endregion
-
-            #region Update suggestions
-
-            #region weather update example
-            //currently not fully implemented as weather is not automatically retrieved from Internet
-
-            //if (Sates.IsWeatherForecastGood)
-            //    ProbVariables.Bot.TellWeatherForecast = BernoulliF(Prob(0.9)); //we should always tell a good weather
-            //else //not a good weather
-            //    ProbVariables.Bot.TellWeatherForecast = from igm in ProbVariables.User.InAGoodMood
-            //                                        from twf in BernoulliF(Prob(igm ? 0.4 : 0.7)) //if in a good mood then put 0.4 chance of telling the weather
-            //                                        select twf;
-            #endregion
-
-            #region adjust distribution over movies suggestions
-            PureFact factJob = PureFacts.GetFacfByName("UserHasJob");
-            PureFact factWatchedMovieYesterday = PureFacts.GetFacfByName("UserMovieYesterday");
-
-            var oldSuggestToWatchMovie = SharedHelper.GetProb(ProbVariables.Bot.SuggestToWatchMovie).Value;
-
-            //no job: suggest during the entire day 0.18, more time means more movie suggestions
-            if ((factJob.IsAnswered && context.Phrases.IsNo(factJob.Value)) || StatesShared.IsWeekend)
-            {
-                ProbVariables.Bot.SuggestToWatchMovie = BernoulliF(Prob(0.18));
-                //KorraBaseHelper.Log("Prob SuggestToWatchMovie changed to: 0.18, no job or weekend");
-            }
-            else if (factJob.IsAnswered && context.Phrases.IsYes(factJob.Value)) //has job
-            {
-                #region working and evening
-                if (StatesShared.IsEvening /*TODO: or after work hours*/)
-                {
-                    //has NOT watched movie yesterday (is working and evening)
-                    if (factWatchedMovieYesterday.IsAnswered && context.Phrases.IsNo(factJob.Value))
-                    {
-                        ProbVariables.Bot.SuggestToWatchMovie = BernoulliF(Prob(0.18));
-                        //KorraBaseHelper.Log("Prob SuggestToWatchMovie changed to: 0.18, evening");
-                    }
-                    //has watched movie yesterday (is working and evening)
-                    else if (factWatchedMovieYesterday.IsAnswered && context.Phrases.IsYes(factJob.Value))
-                    {
-                        ProbVariables.Bot.SuggestToWatchMovie = BernoulliF(Prob(0.12));
-                        // KorraBaseHelper.Log("Prob SuggestToWatchMovie changed to: 0.12. Watched movie yesterday.");
-                    }
-                }
-                #endregion
-                else //is working and not evening, no time because working and not evening
-                {
-                    ProbVariables.Bot.SuggestToWatchMovie = BernoulliF(Prob(0.05));
-                    //KorraBaseHelper.Log("Prob SuggestToWatchMovie changed to: 0.05");
-                }
-            }
-            else //has job unknown
-            {
-                ProbVariables.Bot.SuggestToWatchMovie = BernoulliF(Prob(0.10));
-            }
-
-            if (oldSuggestToWatchMovie != SharedHelper.GetProb(ProbVariables.Bot.SuggestToWatchMovie).Value)
-            {
-                stateChange = true;
-                SharedHelper.Log("Prob SuggestToWatchMovie changed to: " + SharedHelper.GetProb(ProbVariables.Bot.SuggestToWatchMovie));
-            }
-
-            #endregion
-
-            #region adjust sport suggestions
-            PureFact factSport = PureFacts.GetFacfByName("UserDoesSport");
-            //If one is not doing any sport, he should be encouraged to do so:
-            if (factSport.IsAnswered && context.Phrases.IsNo(factSport.Value))
-            {
-                double oldProb = SharedHelper.GetProb(ProbVariables.Bot.SuggestGoToGym).Value;
-                ProbVariables.Bot.SuggestGoToGym = BernoulliF(Prob(0.15));
-            }
-            #endregion
-
-            #endregion
-
-            return stateChange;
+            return regenerationRequested;
         }
 
-        public void BeforeAnalyseUserResponse(PureFact fact)
+        public void InteractionsUpdate(TimeSpan timeSinceStart, int interactionsDoneSinceStart, ref Queue<CommItem> interactions)
         {
-            bool isAnswerd = fact.IsAnswered;
-            string responseValue = fact.Value;
+            //Evaluate triggers that represent 'Surprise' for example
+            //These triggers evaluate a model and add a new interaction
+            foreach (var trigger in ModelTriggers)
+            {
+                int oldExecuteCount = trigger.TriggeredCount;
+
+                if (trigger is IModelEvaluateTrigger &&
+                    (
+                      (trigger.IsOneTimeTrigger && trigger.TriggeredCount == 0)
+                      ||
+                      (!trigger.IsOneTimeTrigger)
+                    )
+                   )
+                {
+                    CommItem? newInteraction = ((IModelEvaluateTrigger)trigger).Process(this);
+
+                    if (newInteraction != null)
+                    {
+                        if (interactions.Peek().Name != newInteraction.Value.Name)
+                        {
+                            HumanEmulator.InsertFirstInteractionList(newInteraction.Value);
+
+                            //TODO: this custom code should be moved to another place
+                            if (trigger is VideoGameSurpriseTrigger)
+                                FlagsShared.RequestSurpriseExpression = true;
+
+                            SharedHelper.Log("Trigger executed: '" + trigger.ToString() + "'");
+                        }
+                    }
+                }
+            }
+        }
+
+        public void BeforeAnalyseUserResponse(PureFact pfact)
+        {
+            //Here you change the responses that were encoded when creating this PureFact, even replace the function responsible for the answers.
+            //This can be useful if you have new information about the user and its environment and this could not be encoded in advance.
+
+            bool isAnswerd = pfact.IsAnswered;
+            string responseValue = pfact.Value;
+
+            //if (context.Phrases.IsYes(responseValue))
+            //{
+            //    fact.StatementOnPositiveResponse = "";
+            //}
+            SharedHelper.Log("Pure fact updated: " + pfact.Name);
         }
 
         public IDistributions GetCognitiveDist()
         {
             if (!isInitialized) SharedHelper.LogError("Not initialized.");
             return cognitiveDist;
+        }
+
+        public void InspectNextInteraction(CommItem nextInteraction)
+        {
+
+        }
+
+        public bool AdjustProbVariablesDuringPlanning(int bufferedInteractionsCount)
+        {
+            bool regenerate = false;
+
+            //1. About bot
+            //exclude this action because there are no items for it
+            if (ProbVariables.Bot.PrSharePureFactInfoAboutBot[(int)PV.Current].Value != 0 && KorraModelHelper.GetItemsLeftForCategory(ActionsEnum.SharePureFactInfoAboutBot) == 0)
+            {
+                //adjust pure facts probabilities: disable AboutBot and boost AboutUser 
+
+                ProbVariables.Bot.PrSharePureFactInfoAboutBot[(int)PV.Current] = Prob(0);
+                SharedHelper.LogWarning("Disabled all pure facts about bot, because there were no items.");
+
+                //we re-inforce AboutUser so that it is stronger than Suggestion action
+                if (ProbVariables.Bot.PrAskPureFactQuestionAboutUser[(int)PV.Current].Value > 0)
+                    ProbVariables.Bot.PrAskPureFactQuestionAboutUser[(int)PV.Current] = ProbVariables.Bot.PrAskPureFactQuestionAboutUser[(int)PV.Increased];
+
+                regenerate = true;
+            }
+
+            //2. About User
+            //exclude this action because there are no items for it
+            if (ProbVariables.Bot.PrAskPureFactQuestionAboutUser[(int)PV.Current].Value != 0 && KorraModelHelper.GetItemsLeftForCategory(ActionsEnum.AskPureFactQuestionAboutUser) == 0)
+            {
+                //adjust pure facts probabilities: disable AboutUser and boost AboutBot
+
+                ProbVariables.Bot.PrAskPureFactQuestionAboutUser[(int)PV.Current] = Prob(0);
+                SharedHelper.Log("Disabled all pure facts about user, because there were no items.");
+
+                //we re-inforce AboutBot so that it is stronger than Suggestion action
+                if (ProbVariables.Bot.PrSharePureFactInfoAboutBot[(int)PV.Current].Value > 0)
+                    ProbVariables.Bot.PrSharePureFactInfoAboutBot[(int)PV.Current] = ProbVariables.Bot.PrSharePureFactInfoAboutBot[(int)PV.Increased];
+
+                regenerate = true;
+            }
+
+            //3. Suggestions
+            //if there are no Pure or Uncertain facts left then we boost suggestions
+            bool noFactsLeft = (ProbVariables.Bot.PrAskPureFactQuestionAboutUser[(int)PV.Current].Value == 0 && ProbVariables.Bot.PrSharePureFactInfoAboutBot[(int)PV.Current].Value == 0);
+
+            if (noFactsLeft && ProbVariables.Bot.PrMakeSuggestion[(int)PV.Current] != ProbVariables.Bot.PrMakeSuggestion[(int)PV.Default])
+            {
+                ProbVariables.Bot.PrMakeSuggestion[(int)PV.Current] = ProbVariables.Bot.PrMakeSuggestion[(int)PV.Default];
+                SharedHelper.Log("All pure facts used. PrMakeSuggestion changed to: " + ProbVariables.Bot.PrMakeSuggestion[(int)PV.Current]);
+            }
+
+            //Keep suggestions decreased if there are more pure facts 
+            if (!noFactsLeft && ProbVariables.Bot.PrMakeSuggestion[(int)PV.Current] != ProbVariables.Bot.PrMakeSuggestion[(int)PV.Descreased])
+            {
+                SharedHelper.Log("PrMakeSuggestion changed decreased.");
+                ProbVariables.Bot.PrMakeSuggestion[(int)PV.Current] = ProbVariables.Bot.PrMakeSuggestion[(int)PV.Descreased];
+            }
+
+            return regenerate;
+        }
+
+        private Joke GetJoke()
+        {
+            Joke selectedJoke;
+
+            PureFact fact = PureFacts.GetFacfByName("EasilyOffended");
+
+            if (fact == null) return null;
+
+            var dist = cognitiveDist.JokesDistribution(fact, this.RomanticJokesFirst, this.RomanticJokesLast);
+
+            if (dist == null) return null;
+
+            var selectionName = dist.Sample();
+
+            selectedJoke = JokesProvider.GetJokeByName(selectionName);
+
+            //SharedHelper.Log("GetPureFactAbouUser: selectionName " + selectionName);
+
+            return selectedJoke;
+        }
+
+        /// <summary>
+        /// This method is provided to the sampler
+        /// </summary>
+        /// <param name="category"></param>
+        /// <returns></returns>
+        public Item GetItem(string category)
+        {
+            if (category == SuggestionsEnum.TellJoke)
+            {
+                var joke = GetJoke();
+
+                return joke;
+            }
+
+            return null;
+        }
+
+        public bool SmileOnNoReactionToUserResponse
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Configures when facial expressions are used
+        /// </summary>
+        /// <param name="item"></param>
+        public void SetFacialExpression(CommItem item)
+        {
+            if (item.IsReactionToUser)
+            {
+                //If it is a reaction, we check if a facial expression was already supplied
+                if (!string.IsNullOrEmpty(item.FacialExpression))
+                    KorraModelHelper.SetFacialExpressionFlag(item.FacialExpression);
+                else
+                    //Default to smile if not set in the reaction itself
+                    FlagsShared.RequestSmileAfterTalkingDone = true;
+            }
+            else
+            if (item.IsPureFact)
+            {
+                PureFact fact = PureFacts.GetFacfByName(item.Name);
+
+                if (fact != null && fact.Type == PureFactType.AboutBot) KorraModelHelper.SetFacialExpressionFlag(FaceExp.SmileAfterTalking);
+            }
+            else
+            if (item.Action == ActionsEnum.ChangeVisualAppearance)
+                KorraModelHelper.SetFacialExpressionFlag(FaceExp.SmileAfterTalking);
+            else
+            if (item.Action == ActionsEnum.ExpressMentalState)
+                KorraModelHelper.SetFacialExpressionFlag(FaceExp.SmileAfterTalking);
+            else
+            if (item.Suggestion == SuggestionsEnum.TellJoke)
+            {
+                Joke joke = JokesProvider.GetJokeByName(item.Name);
+
+                if (joke != null && !string.IsNullOrEmpty(item.FacialExpression))
+                {
+                    KorraModelHelper.SetFacialExpressionFlag(joke.FaceExpression);
+                }
+            }
+            else
+            if (item.Suggestion == SuggestionsEnum.ListenToSong ||
+                item.Suggestion == SuggestionsEnum.GoToGym
+                || item.Suggestion == SuggestionsEnum.WatchMovie
+                || item.Suggestion == SuggestionsEnum.GoOut)
+                KorraModelHelper.SetFacialExpressionFlag(FaceExp.SmileAfterTalking);
+
         }
     }
 }

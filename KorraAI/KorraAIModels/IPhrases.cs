@@ -34,7 +34,7 @@ namespace Companion.KorraAI.Models
 
         string No();
 
-        string ProcessAge(string value, out bool isValid);
+        string ProcessAge(string value, out bool isValid, out string faceExpr);
 
         bool IsAnsweredAndUserIsMan();
 
@@ -48,9 +48,18 @@ namespace Companion.KorraAI.Models
 
         string ExplainChangeClothes();
 
-        string ProcessNationality(string value, out bool isValid);
+        string ProcessNationality(string value, out bool isValid, out string faceExpr);
 
-        string ProcessMarried(string value, out bool isValid);
+        string ProcessMarried(string value, out bool isValid, out string faceExpr);
 
+        string MovieSuggestions();
+
+        string SurpriseVideoGames(int surprise, bool LikesGamesAskedFirst);
+
+        string ProcessValentinesDay(string value, out bool isValid, out string faceExpr);
+
+        string ProcessRelationshipFirstStep(string value, out bool isValid, out string faceExpr);
+
+        string ProcessHasKids(string value, out bool isValid, out string faceExpr);
     }
 }

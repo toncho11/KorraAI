@@ -19,25 +19,15 @@ namespace Companion.KorraAI
         private Queue<string> allSuggestions = new Queue<string>();
         private Queue<string> allActions = new Queue<string>();
 
-        public void Init(ModelContext context)
+        Func<int, bool> AdjFunc;
+        Func<string , Item> GetItemFunc;
+
+        public void Init(ModelContext context, Func<int, bool> adjFunc, Func<string, Item> getItemFunc)
         {
             this.context = context;
+            this.AdjFunc = adjFunc;
+            this.GetItemFunc = getItemFunc;
         }
-
-        /// <summary>
-        /// To set pobabilities but also connections between them 
-        /// </summary>
-        //public void SetProbVariables(string name)
-        //{
-
-        //}
-        /// <summary>
-        /// To set pobabilities but also connections between them 
-        /// </summary>
-        //public void UpdateProbVariables(string name)
-        //{
-
-        //}
 
         private Queue<string> GenerateActions(string[] disabledActions)
         {
@@ -112,11 +102,11 @@ namespace Companion.KorraAI
 
             var Suggestion = CategoricalF(
 
-                    //Can be multiple times
-                    ItemProb(SuggestionsEnum.TellJoke, SharedHelper.GetProb(ProbVariables.Bot.TellJoke)), //we can say several jokes in a row, no need to reduce the probability of saying a joke
-
                     //Multiple times
                     ItemProb(SuggestionsEnum.ListenToSong, ProbVariables.Bot.PrSuggestListenToSong),
+
+                    //Can be multiple times
+                    ItemProb(SuggestionsEnum.TellJoke, SharedHelper.GetProb(ProbVariables.Bot.TellJoke)), //we can say several jokes in a row, no need to reduce the probability of saying a joke
 
                     //A few times per evening
                     ItemProb(SuggestionsEnum.GoOut, SharedHelper.GetProb(ProbVariables.Bot.SuggestGoOut)),
@@ -124,6 +114,7 @@ namespace Companion.KorraAI
                     //A few times per evening
                     ItemProb(SuggestionsEnum.WatchMovie, SharedHelper.GetProb(ProbVariables.Bot.SuggestToWatchMovie)),
 
+                    //NOT USED!
                     //Once per Morning (current day) / evening (tomorrow)
                     //ItemProb(Suggestions.TellWeatherForecast, ProbVariables.PrTellWeatherForecast),
 
@@ -154,18 +145,14 @@ namespace Companion.KorraAI
         /// Answer to questions or other events that happen at runtime require that the old Interactions items are cleared.
         /// When items are generated in advance, regeneation is not requires, as we need to follow the old distribution and then the new one.
         /// </param>
-        public void ReGenerateMainSequence(bool ClearOldInteractions, ref Queue<CommItem> Interactions)
+        public void ReGenerateMainSequence(ref Queue<CommItem> Interactions)
         {
-            Dictionary<string, int> interStats = new Dictionary<string, int>();
+            bool ClearOldInteractions = true;
+            InteractionsStat.Reset();
 
             int oldInteractionsCount = Interactions.Count;
             DateTime start = DateTime.Now;
-            SharedHelper.Log("**************** Regenerating interactions: currently generated interactions: " + oldInteractionsCount);
-
-            /*Old interactions are not cleared because they followed an old distribution that was correct
-              Due to changes in environment/questions or simply lask items for certain category forces a new distribution.
-              This means that new interactions items are appended.
-            */
+            SharedHelper.Log("**************** Regenerating interactions ****************");
 
             if (ClearOldInteractions)
             {
@@ -186,6 +173,11 @@ namespace Companion.KorraAI
 
             while (allActions.Count > 0 && allSuggestions.Count > 0)
             {
+                if (this.AdjFunc(Interactions.Count))
+                    allActions = GenerateActions();
+
+                //==================================================================================================
+
                 CommItem citem = new CommItem();
                 citem.Action = allActions.Dequeue();
 
@@ -204,7 +196,9 @@ namespace Companion.KorraAI
                     if (suggestion == SuggestionsEnum.TellJoke)
                     {
                         //the fact that joke has bee planned, does not mean it has been executed
-                        Joke joke = JokesProvider.GetJoke();
+
+                        Joke joke = GetItemFunc(SuggestionsEnum.TellJoke) as Joke;
+
                         if (joke != null)
                         {
                             joke.IsPlanned = true;
@@ -215,14 +209,15 @@ namespace Companion.KorraAI
                             citem.Suggestion = suggestion;
                             citem.IsJokePureFact = joke.IsPureFact; //these jokes come from the PureFacts collection
                             citem.UIAnswer = joke.PureFactUI;
+                            citem.FacialExpression = joke.FaceExpression;
 
-                            if (interStats.ContainsKey(SuggestionsEnum.TellJoke)) interStats[SuggestionsEnum.TellJoke]++; else interStats[SuggestionsEnum.TellJoke] = 0;
+                            InteractionsStat.AddScheduledInteraction(SuggestionsEnum.TellJoke);
                         }
                         else
                         {
                             citem.TextToSay = "__nointeraction__";
                             //UnityEngine.Debug.LogWarning("Not enough jokes during planning.");
-                            if (interStats.ContainsKey(SuggestionsEnum.TellJoke + "_missing")) interStats[SuggestionsEnum.TellJoke + "_missing"]++; else interStats[SuggestionsEnum.TellJoke + "_missing"] = 0;
+                            InteractionsStat.AddMissingInteraction(SuggestionsEnum.TellJoke);
                         }
                     }
                     #endregion
@@ -231,7 +226,7 @@ namespace Companion.KorraAI
                     if (suggestion == SuggestionsEnum.GoOut)
                     {
                         citem.TextToSay = context.Phrases.GoOutAnnoucement();
-                        if (interStats.ContainsKey(SuggestionsEnum.GoOut)) interStats[SuggestionsEnum.GoOut]++; else interStats[SuggestionsEnum.GoOut] = 0;
+                        InteractionsStat.AddScheduledInteraction(SuggestionsEnum.GoOut);
                     }
                     #endregion
 
@@ -246,13 +241,13 @@ namespace Companion.KorraAI
                             citem.TextToSay = context.Phrases.MovieAnnouncement(movie);
 
                             //UnityEngine.Debug.LogWarning("Movie scheduled: " + citem.TextToSay);
-                            if (interStats.ContainsKey(SuggestionsEnum.WatchMovie)) interStats[SuggestionsEnum.WatchMovie]++; else interStats[SuggestionsEnum.WatchMovie] = 0;
+                            InteractionsStat.AddScheduledInteraction(SuggestionsEnum.WatchMovie);
                         }
                         else
                         {
                             citem.TextToSay = "__nointeraction__";
                             SharedHelper.LogWarning("Not enough movies during planning.");
-                            if (interStats.ContainsKey(SuggestionsEnum.WatchMovie + "_missing")) interStats[SuggestionsEnum.WatchMovie + "_missing"]++; else interStats[SuggestionsEnum.WatchMovie + "_missing"] = 0;
+                            InteractionsStat.AddMissingInteraction(SuggestionsEnum.WatchMovie);
                         }
                     }
                     #endregion
@@ -274,13 +269,14 @@ namespace Companion.KorraAI
                             song.IsPlanned = true;
                             citem.Name = song.Name;
                             citem.TextToSay = song.Name;
-                            if (interStats.ContainsKey(SuggestionsEnum.ListenToSong)) interStats[SuggestionsEnum.ListenToSong]++; else interStats[SuggestionsEnum.ListenToSong] = 0;
+
+                            InteractionsStat.AddScheduledInteraction(SuggestionsEnum.ListenToSong);
                         }
                         else
                         {
                             citem.TextToSay = "__nointeraction__";
                             SharedHelper.LogWarning("Not enough songs during planning.");
-                            if (interStats.ContainsKey(SuggestionsEnum.ListenToSong + "_missing")) interStats[SuggestionsEnum.ListenToSong + "_missing"]++; else interStats[SuggestionsEnum.ListenToSong + "_missing"] = 0;
+                            InteractionsStat.AddMissingInteraction(SuggestionsEnum.ListenToSong);
                         }
                     }
                     #endregion
@@ -295,13 +291,13 @@ namespace Companion.KorraAI
                             citem.Name = sport.Name;
                             citem.TextToSay = sport.Text;
 
-                            if (interStats.ContainsKey(SuggestionsEnum.GoToGym)) interStats[SuggestionsEnum.GoToGym]++; else interStats[SuggestionsEnum.GoToGym] = 0;
+                            InteractionsStat.AddScheduledInteraction(SuggestionsEnum.GoToGym);
                         }
                         else
                         {
                             citem.TextToSay = "__nointeraction__";
                             SharedHelper.LogWarning("Not enough sports during planning.");
-                            if (interStats.ContainsKey(SuggestionsEnum.GoToGym + "_missing")) interStats[SuggestionsEnum.GoToGym + "_missing"]++; else interStats[SuggestionsEnum.GoToGym + "_missing"] = 0;
+                            InteractionsStat.AddMissingInteraction(SuggestionsEnum.GoToGym);
                         }
                     }
                     #endregion
@@ -314,59 +310,60 @@ namespace Companion.KorraAI
                     citem.TextToSay = "###place holder for UncertanFactQuestion";
                     citem.IsPureFact = false;
 
-                    if (interStats.ContainsKey(ActionsEnum.AskUncertanFactQuestion)) interStats[ActionsEnum.AskUncertanFactQuestion]++; else interStats[ActionsEnum.AskUncertanFactQuestion] = 0;
+                    InteractionsStat.AddScheduledInteraction(ActionsEnum.AskUncertanFactQuestion);
                 }
                 else if (citem.Action == ActionsEnum.AskPureFactQuestionAboutUser) //ABOUT USER
                 {
-                    PureFact[] q = PureFactsAboutUserLeft();
+                    int pfabul = PureFactsAboutUserLeftCount();
 
-                    if (q.Length > 0)
+                    if (pfabul > 0)
                     {
-                        #region Randomize the first element
-                        int r = rnd.Next(q.Length);
-                        SharedHelper.Swap(q, 0, r);
-                        #endregion
+                        PureFact sf = PureFacts.GetPureFactAbouUser();
 
-                        //SharedHelper.LogWarning("Found total " + Actions.AskPureFactQuestionAboutUser + ": " + q.Length.ToString());
+                        if (sf == null)
+                            SharedHelper.LogError("There are pure facts about the user left, but no pure fact has been selected.");
+                        else
+                        {
+                            citem.TextToSay = sf.Question;
+                            //SharedHelper.Log("q name: " + q [0].Name);
+                            citem.Name = sf.Name;
+                            citem.IsPureFact = true;
 
-                        citem.TextToSay = q[0].Question;
-                        //SharedHelper.Log("q name: " + q [0].Name);
-                        citem.Name = q[0].Name;
-                        citem.IsPureFact = true;
+                            PureFacts.SetAsPlanned(sf.Name);
 
-                        PureFacts.SetAsPlanned(q[0].Name);
-
-                        citem.UIAnswer = q[0].UI;
-
-                        if (interStats.ContainsKey(ActionsEnum.AskPureFactQuestionAboutUser)) interStats[ActionsEnum.AskPureFactQuestionAboutUser]++; else interStats[ActionsEnum.AskPureFactQuestionAboutUser] = 0;
+                            citem.UIAnswer = sf.UI;
+                        }
+                        InteractionsStat.AddScheduledInteraction(ActionsEnum.AskPureFactQuestionAboutUser);
                     }
-                    else if (interStats.ContainsKey(ActionsEnum.AskPureFactQuestionAboutUser + "_missing")) interStats[ActionsEnum.AskPureFactQuestionAboutUser + "_missing"]++; else interStats[ActionsEnum.AskPureFactQuestionAboutUser + "_missing"] = 0;
-
-                    AdjustForPureFactsAvailabilityUserAndBot(q.Length, false, true);
+                    else InteractionsStat.AddMissingInteraction(ActionsEnum.AskPureFactQuestionAboutUser);
                 }
                 else if (citem.Action == ActionsEnum.SharePureFactInfoAboutBot) //ABOUT BOT
                 {
-                    var q = PureFactsAboutBotLeft();
+                    int pfabbl = PureFactsAboutBotLeftCount();
 
-                    if (q.Length > 0)
+                    if (pfabbl > 0)
                     {
-                        //SharedHelper.Log("Found " + Actions.SharePureFactInfoAboutBot + ": " + q.Length.ToString());
-                        citem.TextToSay = q[0].Acknowledgement;
-                        citem.IsPureFact = true;
-                        citem.Name = q[0].Name;
+                        PureFact sf = GetPureFactAbouBot();
+                        if (sf == null)
+                            SharedHelper.LogError("There are pure facts about the bot left, but no pure fact has been selected.");
+                        else
+                        {
+                            //SharedHelper.Log("Found " + Actions.SharePureFactInfoAboutBot + ": " + q.Length.ToString());
+                            citem.TextToSay = sf.Acknowledgement;
+                            citem.IsPureFact = true;
+                            citem.Name = sf.Name;
 
-                        PureFacts.SetAsPlanned(q[0].Name);
-
-                        if (interStats.ContainsKey(ActionsEnum.SharePureFactInfoAboutBot)) interStats[ActionsEnum.SharePureFactInfoAboutBot]++; else interStats[ActionsEnum.SharePureFactInfoAboutBot] = 0;
+                            PureFacts.SetAsPlanned(sf.Name);
+                        }
+                        InteractionsStat.AddScheduledInteraction(ActionsEnum.SharePureFactInfoAboutBot);
                     }
-                    else if (interStats.ContainsKey(ActionsEnum.SharePureFactInfoAboutBot + "_missing")) interStats[ActionsEnum.SharePureFactInfoAboutBot + "_missing"]++; else interStats[ActionsEnum.SharePureFactInfoAboutBot + "_missing"] = 0;
-
-                    AdjustForPureFactsAvailabilityUserAndBot(q.Length, true, false);
+                    else
+                        InteractionsStat.AddMissingInteraction(ActionsEnum.SharePureFactInfoAboutBot);
                 }
                 else if (citem.Action == ActionsEnum.ChangeVisualAppearance)
                 {
                     citem.TextToSay = context.Phrases.ChangeClothesAnnouncement();
-                    if (interStats.ContainsKey(ActionsEnum.ChangeVisualAppearance)) interStats[ActionsEnum.ChangeVisualAppearance]++; else interStats[ActionsEnum.ChangeVisualAppearance] = 0;
+                    InteractionsStat.AddScheduledInteraction(ActionsEnum.ChangeVisualAppearance);
                 }
                 else if (citem.Action == ActionsEnum.ExpressMentalState)
                 {
@@ -382,7 +379,7 @@ namespace Companion.KorraAI
                         citem.TextToSay = "###place holder for InAGoodMood";
                     }
 
-                    if (interStats.ContainsKey(ActionsEnum.ExpressMentalState)) interStats[ActionsEnum.ExpressMentalState]++; else interStats[ActionsEnum.ExpressMentalState] = 0;
+                    InteractionsStat.AddScheduledInteraction(ActionsEnum.ExpressMentalState);
                 }
                 else SharedHelper.LogError("Unknown action: " + citem.Action);
 
@@ -424,103 +421,79 @@ namespace Companion.KorraAI
             }
             SharedHelper.LogWarning("Interactions list: " + DebugItem);
 
-            DebugItem = "";
-            i = 0;
-            foreach (var key in interStats.Keys)
-            {
-                i++;
-                DebugItem += "|" + key + ": " + interStats[key] + Environment.NewLine;
-            }
-            SharedHelper.LogWarning("Interactions statistics: " + Environment.NewLine + DebugItem);
+            InteractionsStat.PrintSummary();
 
             #endregion
 
             ProbVariables.PrintActionsProbabilities();
 
-            SharedHelper.Log("Iteractions added: " + (Interactions.Count - oldInteractionsCount) + ". Total Interactions:" + Interactions.Count);
+            SharedHelper.Log("Interactions added: " + (Interactions.Count - oldInteractionsCount) + ". Total Interactions:" + Interactions.Count);
+            SharedHelper.Log("**************** Regenerating interactions ****************");
         }
 
-        public static PureFact[] PureFactsAboutUserLeft()
+        public static int PureFactsAboutUserLeftCount()
         {
             var q = (from pf in PureFacts.GetList()
-                     where pf.Type == PureFactType.AboutUser && pf.IsPlanned == false && pf.IsAnswered == false
+                     where pf.Type == PureFactType.AboutUser && pf.IsPlanned == false && pf.IsUsed == false
                      select pf).ToArray();
 
-            return q;
+            return q.Length;
         }
 
-        public static PureFact[] PureFactsAboutBotLeft()
+        public static int PureFactsAboutBotLeftCount()
         {
             var q = (from pf in PureFacts.GetList()
                      where pf.Type == PureFactType.AboutBot && pf.IsPlanned == false && pf.IsUsed == false
                      select pf).ToArray();
 
-            return q;
+            return q.Length;
         }
 
-        private static void DisablePureFactsAboutBot()
+        private static PureFact GetPureFactAbouBot()
         {
-            ProbVariables.Bot.PrSharePureFactInfoAboutBot[(int)PV.Current] = Prob(0);
-            SharedHelper.LogWarning("Disabled all pure facts about bot, because there were no items.");
-        }
+            var q = (from pf in PureFacts.GetList()
+                     where pf.Type == PureFactType.AboutBot && pf.IsPlanned == false && pf.IsUsed == false
+                     select pf).ToArray();
 
-        private static void DisablePureFactQuestionAboutUser()
-        {
-           ProbVariables.Bot.PrAskPureFactQuestionAboutUser[(int)PV.Current] = Prob(0);
-            SharedHelper.LogWarning("Disabled all pure facts about user, because there were no items.");
-        }
-
-        /// <summary>
-        /// Adjusts the probabilities of Pure Facts about Bot and User
-        /// If there are no more facts about the Bot, we disable this category, but we boost the other
-        /// If both contain no more items then both are disabled, but then we need to boost suggestions a bit
-        /// </summary>
-        /// <param name="factsLeft"></param>
-        /// <param name="isAboutBot"></param>
-        /// <param name="isAboutUser"></param>
-        public void AdjustForPureFactsAvailabilityUserAndBot(int factsLeft, bool isAboutBot, bool isAboutUser)
-        {
-            bool regenerate = false;
-
-            if (isAboutUser)
+            if (q.Length > 0)
             {
-                if (factsLeft <= 1) //1 because 1 is the only currently processed
+                string[] group1 = { "BotName" }; //conversation should start with these
+                string[] group2 = { "BotAge", "BotSex" }; //conversation should continue with these
+
+                List<ItemProb<string>> itemProbs = new List<ItemProb<string>>();
+
+                //assign probabilities 
+                foreach (PureFact fact in q)
                 {
-                    //adjust pure facts probabilities: disable one and boost the other 
-                    if (ProbVariables.Bot.PrSharePureFactInfoAboutBot[(int)PV.Current].Value > 0)
-                        ProbVariables.Bot.PrSharePureFactInfoAboutBot[(int)PV.Current] = ProbVariables.Bot.PrSharePureFactInfoAboutBot[(int)PV.Increased]; //we reinfoce the other one so that it is stronger than suggestion action
-
-                    DisablePureFactQuestionAboutUser();//because there are no more facts for it 
-                    regenerate = true;
+                    if (group1.Contains(fact.Name)) //add only 1 item
+                    {
+                        itemProbs.Add(new ItemProb<string>(fact.Name, Prob(0.99)));
+                        break;
+                    }
+                    else
+                    if (group2.Contains(fact.Name))
+                        itemProbs.Add(new ItemProb<string>(fact.Name, Prob(0.25)));
+                    else
+                        itemProbs.Add(new ItemProb<string>(fact.Name, Prob(0.8)));
                 }
-            }
 
-            if (isAboutBot)
+                var pureFactDistF = CategoricalF(itemProbs.ToArray()).Normalize();
+
+                var pureFactDist = pureFactDistF.ToSampleDist();
+
+                var selectionName = pureFactDist.Sample();
+
+                PureFact selectedPureFact = PureFacts.GetFacfByName(selectionName);
+
+                //SharedHelper.Log("GetPureFactAbouUser: selectionName " + selectionName);
+
+                return selectedPureFact;
+            }
+            else
             {
-                //exclude this action because there are no items for it
-                if (factsLeft <= 1)
-                {
-                    //adjust pure facts probabilities: disable one and boost the other 
-                    if (ProbVariables.Bot.PrAskPureFactQuestionAboutUser[(int)PV.Current].Value > 0) //the other is boosted only if it was not disabled
-                        ProbVariables.Bot.PrAskPureFactQuestionAboutUser[(int)PV.Current] = ProbVariables.Bot.PrAskPureFactQuestionAboutUser[(int)PV.Increased]; //we re-infoce the other one so that it is stronger than suggestion action
-
-                    DisablePureFactsAboutBot(); //because there are no more facts for it
-                    regenerate = true;
-                }
+                SharedHelper.LogError("GetPureFactAbouBot could not supply a pure fact about the bot.");
+                return null;
             }
-
-            //if no more pure facts we also boost suggestions
-            if (ProbVariables.Bot.PrAskPureFactQuestionAboutUser[(int)PV.Current].Value == 0 && ProbVariables.Bot.PrSharePureFactInfoAboutBot[(int)PV.Current].Value == 0)
-            {
-                ProbVariables.Bot.PrMakeSuggestion[(int)PV.Current] = ProbVariables.Bot.PrMakeSuggestion[(int)PV.Default];
-                SharedHelper.LogWarning("All pure facts used. PrMakeSuggestion changed to: " + ProbVariables.Bot.PrMakeSuggestion[(int)PV.Current]);
-                regenerate = true;
-            }
-
-            if (regenerate)
-                allActions = GenerateActions(); //we get new actions considering the above change of probability (actions are replaced)
-
-
         }
 
         public Queue<string> GenerateActions()

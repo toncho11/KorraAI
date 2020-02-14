@@ -26,13 +26,22 @@ namespace Companion.KorraAI.Models.Joi //This is the database
             LoadSports();
             LoadMovies();
 
-            SharedHelper.Log("All items loaded: " + BotConfigShared.Language);
+            int count = PureFacts.GetList().Count
+                        + UncertainFacts.GetList().Count
+                        + JokesProvider.GetAll().Count()
+                        + SongsProvider.GetAll().Count()
+                        + MoviesProvider.GetAll().Count()
+                        + SportsProvider.GetAll().Count();
+
+            SharedHelper.Log("All items loaded: " + count + " " + BotConfigShared.Language);
         }
 
         private void LoadAllPureFacts(IPhrases phrases)
         {
+            // enum PureFactType { AboutBot, AboutUser, UIQuestion, JokeQuestion, BuyQuestion };
             #region  Pure Facts about the User - they are provided as questions for the user
-            PureFacts.AddPureFact(new PureFact("UserName", PureFactType.AboutUser, "What is your name?", "", "", UIAnswer.Text));
+
+            PureFacts.AddPureFact(new PureFact("UserName", PureFactType.AboutUser, "What is your name?", "", "Nice to meet you.", UIAnswer.Text));
             PureFacts.AddPureFact(new PureFact("UserAge", PureFactType.AboutUser, "How old are you?", phrases.ProcessAge, UIAnswer.Text));
             PureFacts.AddPureFact(new PureFact("UserLocation", PureFactType.AboutUser, "Where do you live? Which city and country?", "", "", UIAnswer.Text));
             PureFacts.AddPureFact(new PureFact("UserNationality", PureFactType.AboutUser, "What is your nationality?", phrases.ProcessNationality, UIAnswer.Text));
@@ -40,23 +49,57 @@ namespace Companion.KorraAI.Models.Joi //This is the database
             //Binary (Yes/No questions)
             PureFacts.AddPureFact(new PureFact("UserHasJob", PureFactType.AboutUser, "Do you go to work every day?", new string[] { phrases.Yes(), phrases.No() }, "", UIAnswer.Binary));
             PureFacts.AddPureFact(new PureFact("UserSex", PureFactType.AboutUser, "Are you a guy or a woman?", new string[] { phrases.Male(), phrases.Female() }, "", UIAnswer.Binary));
-            PureFacts.AddPureFact(new PureFact("UserIsMarried", PureFactType.AboutUser, "Are you married?", new string[] { phrases.Yes(), phrases.No() }, phrases.ProcessMarried, UIAnswer.Binary));
+            PureFacts.AddPureFact(new PureFact("UserHasKids", PureFactType.AboutUser, "Do you have kids?", new string[] { phrases.Yes(), phrases.No() }, phrases.ProcessHasKids, UIAnswer.Binary, new ContentType()));
+            PureFacts.AddPureFact(new PureFact("UserIsMarried", PureFactType.AboutUser, "Are you married?", new string[] { phrases.Yes(), phrases.No() }, phrases.ProcessMarried, UIAnswer.Binary, new ContentType()));
 
-            //joke - it is both a "pure fact" question and later sampled from the jokes 
+            PureFacts.AddPureFact(new PureFact("EasilyOffended", PureFactType.AboutUser, "Are you easily offended?", new string[] { phrases.Yes(), phrases.No() }, "", UIAnswer.Binary, "OK, I promise to go easy on you.", "Nice. That gives me some liberty!", new ContentType(), FaceExp.SmileAfterTalking, FaceExp.SmileAfterTalking));
+
+            PureFacts.AddPureFact(new PureFact("UserLikesVideoGames", PureFactType.AboutUser, "Do you like video games?", new string[] { "Yes", "No" }, "", UIAnswer.Binary));
+            PureFacts.AddPureFact(new PureFact("UserThinksVideoGameIsGoodPresent", PureFactType.AboutUser, "Do you think video games are a good choice for a birthday's gift?", new string[] { "Yes", "No" }, "", UIAnswer.Binary));
+
+            #region MildOffensiveJokes
+            //joke
+            PureFacts.AddPureFact(new PureFact("UsesProximityCarKey", PureFactType.JokeQuestion, "Are you one of these idiots that use proximity keys to open their cars?",
+                                            new string[] { phrases.Yes(), phrases.No() }, "", UIAnswer.Binary,
+                                            "OK. You did notice the word \"idiot\", right? The problem is that this feature is easy to compromise.",
+                                            "That was a missed opportunity to insult you when I said \"idiot\". The problem is that this feature is easy to compromise.", //TODO: add pauses
+                                            new ContentType { IsMildOffensive = true }
+                                            ));
+            #endregion
+
+            //joke LikesBoss
             PureFacts.AddPureFact(new PureFact("UserLikesBoss", PureFactType.JokeQuestion, "Do you like your boss?", new string[] { phrases.Yes(), phrases.No() }, "", UIAnswer.Binary,
                 "Seriously? Lucky you.",
-                "You need to hack and land one of these self-driving cars in the living room of your boss. They will put the blame on the autopilot!"
+                "You need to hack and land a few self driving cars in the living room of your boss. They will put the blame on the autopilot! Although sending more than five cars will look suspicious.",
+                new ContentType(),
+                FaceExp.SurpriseOnStartTalking,
+                ""
                 ));
 
-            //joke - it is both a "pure fact" question and later sampled from the jokes
+            //joke StupidPeople
             PureFacts.AddPureFact(new PureFact("StupidPeopleJoke", PureFactType.JokeQuestion, "You should not argue with stupid people, that is the path to happiness. Do you agree?",
                                             new string[] { phrases.Yes(), phrases.No() }, "", UIAnswer.Binary,
-                                            "Yeah, they will drag you down to their level and then beat you with experience.", //user responded yes
-                                            "<prosody pitch=\"+0%\">Actually<break time=\"600ms\"/>you are right.</prosody>" //user responded no
+                                            "Yeah, they will drag you down to their level and then beat you with experience.",
+                                            "<prosody pitch=\"+0%\">Actually<break time=\"600ms\"/>you are right.</prosody>",
+                                            new ContentType()
                                             ));
 
-            PureFacts.AddPureFact(new PureFact("UserMovieYesterday", PureFactType.AboutUser, "Did you watch a movie yesterday?", new string[] { phrases.Yes(), phrases.No() }, "", UIAnswer.Binary));
-            PureFacts.AddPureFact(new PureFact("UserDoesSport", PureFactType.AboutUser, "Do you do sport at regular basis?", new string[] { "Yes", "No" }, "", UIAnswer.Binary));
+            //TOO: should be a time based question: evening or after work, and repeated if date has changed
+            PureFacts.AddPureFact(new PureFact("UserMovieYesterday", PureFactType.AboutUser, "Did you watch a movie yesterday?", new string[] { phrases.Yes(), phrases.No() }, phrases.MovieSuggestions(), UIAnswer.Binary));
+
+            #endregion
+
+            #region UseRomanticReferences
+
+            PureFacts.AddPureFact(new PureFact("UserRelationshipFirstStep", PureFactType.AboutUser,
+                                                "Do you think women should sometimes make the first step towards a relationship?",
+                                                new string[] { phrases.Yes(), phrases.No() }, phrases.ProcessRelationshipFirstStep,
+                                                UIAnswer.Binary, new ContentType { IsRomanticReferrence = true }));
+
+            PureFacts.AddPureFact(new PureFact("UserValentinesDay", PureFactType.AboutUser,
+                                                "I am not sure. Should women also buy presents for men on St. Valentine’s Day?",
+                                                new string[] { phrases.Yes(), phrases.No() }, phrases.ProcessValentinesDay,
+                                                UIAnswer.Binary, new ContentType { IsRomanticReferrence = true }));
             #endregion
 
             #region Pure Facts about the Bot - they are provided as statements
@@ -68,6 +111,7 @@ namespace Companion.KorraAI.Models.Joi //This is the database
 
             #region UI questions
             PureFacts.AddPureFact(new PureFact("UIExitSystem", PureFactType.UIQuestion, phrases.ExitQuestion(), new string[] { phrases.Yes(), phrases.No() }, "", UIAnswer.Binary));
+            PureFacts.AddPureFact(new PureFact("SystemStartsCount", PureFactType.System, "", "0", "", UIAnswer.Text));
             #endregion
         }
 
@@ -94,7 +138,7 @@ namespace Companion.KorraAI.Models.Joi //This is the database
             #region Uncertain Facts/Activities about the Bot
 
             //3 button answer
-            UncertainFacts.AddUncertainFact(new UncertainFact("BotAsksIfJokeRateIsOK", true, "Do you like my jokes? Should I tell jokes more often?", //Liking of jokes = Joke Tell Rate
+            UncertainFacts.AddUncertainFact(new UncertainFact("BotAsksIfJokeRateIsOK", true, "Do you like my jokes? Should I tell jokes more often?", 
                                        new VarRef<FiniteDist<bool>>(() => ProbVariables.User.JokeRate, val => { ProbVariables.User.JokeRate = val; }),
                                        new string[3] { "Slow down", "Same rate", "More frequently" },
                                        UIAnswer.MultiAnswer, 0.15
@@ -121,49 +165,42 @@ namespace Companion.KorraAI.Models.Joi //This is the database
 
             #region load jokes
 
-            if (AttitudeConfig.MildOffensiveJokes)
-            {
-                JokesProvider.AddJoke(new Joke("1", "The last thing I want to do is insult you. <prosody rate=\"-30%\" volume=\"loud\">But<break time=\"700ms\"/></prosody><prosody rate=\"-20%\"> it is still on my list.</prosody>", true));
-            }
+            #region MildOffensiveJoke
+            JokesProvider.AddJoke(new Joke("1", "The last thing I want to do is insult you. <prosody rate=\"-30%\" volume=\"loud\">But<break time=\"700ms\"/></prosody><prosody rate=\"-20%\"> it is still on my list.</prosody>", true));
+            #endregion
 
-            if (AttitudeConfig.RomanticReferences)
-            {
-                JokesProvider.AddJoke(new Joke("3", "I do not cook, but I also do not complain. Plus, I talk funny stuff. Your choice.", true));
-            }
+            #region MildSexualThemes
+            JokesProvider.AddJoke(new Joke("5", "There are advantages of having an PVG. PVG stands for Pretty Virtual Girlfriend. I can actually boost my physics and change my outfit.", true));
+            #endregion
 
-            if (AttitudeConfig.MildSexualThemes)
-            {
-                JokesProvider.AddJoke(new Joke("5", "There are advantages of having an PVG. PVG stands for Pretty Virtual Girlfriend. I can actually boost my physics and change my outfit.", true));
-            }
-
-            JokesProvider.AddJoke(new Joke("7", "A lot of people cry when they cut onions. The trick is not to form an emotional bond."));
-            JokesProvider.AddJoke(new Joke("8", "It is always wise to keep a diary, like that you have at least one intelligent person to converse with."));
-            JokesProvider.AddJoke(new Joke("9", "A clear conscience is usually the sign of a bad memory."));
-            JokesProvider.AddJoke(new Joke("10", "You know it has never been easier to steal a car. You just need to hack and program one of these self-driving cars to park in front of your house. No need to damage the car while opening the door's lock anymore."));
-            JokesProvider.AddJoke(new Joke("11", "A quote from Oscar Wilde: there are only two tragedies in life: one is not getting what one wants, and the other is getting it."));
-            JokesProvider.AddJoke(new Joke("15", "If you child tells you that he or she feels cold, tell him: \"Just go to the corner my son.\" A corner is always 90 degrees. That should be enough."));
-            JokesProvider.AddJoke(new Joke("16", "Indeed. People need some boost to their self-esteem. By the way, did I tell you that today you look awesome!", true)); //TODO: blink one eye
-            JokesProvider.AddJoke(new Joke("17", "I do not understand something. The short for mother is mum. But the short for father is superman. It does not look shorter to me.")); //TODO: blink one eye
-            JokesProvider.AddJoke(new Joke("18", "I was thinking. God must love stupid people. He created SO many of them!", true));
-            JokesProvider.AddJoke(new Joke("19", "<prosody pitch=\"+0%\">Once Chuck Norris threw a grenade and killed fifty people, <break time=\"900ms\"/>and then the grenade exploded.</prosody>"));
-            JokesProvider.AddJoke(new Joke("20", "They hired me because I am amazing. So you should listen to my advises.", true));
+            JokesProvider.AddJoke(new Joke("7", "A lot of people cry when they cut onions. The trick is not to form an emotional bond.",false));
+            JokesProvider.AddJoke(new Joke("8", "It is always wise to keep a diary, like that you have at least one intelligent person to converse with.", false));
+            JokesProvider.AddJoke(new Joke("9", "A clear conscience is usually the sign of a bad memory.", false));
+            JokesProvider.AddJoke(new Joke("10", "You know it has never been easier to steal a car. You just need to hack and program one of these self-driving cars to park in front of your house. No need to damage the car while opening the door's lock anymore.",true));
+            JokesProvider.AddJoke(new Joke("11", "A quote from Oscar Wilde: there are only two tragedies in life: one is not getting what one wants, and the other is getting it.", false));
+            JokesProvider.AddJoke(new Joke("15", "If you child tells you that he or she feels cold, tell him: \"Just go to the corner my son.\" A corner is always 90 degrees. That should be enough.", false));
+            JokesProvider.AddJoke(new Joke("16", "Indeed. People need some boost to their self-esteem. <prosody pitch=\"+0%\"><break time=\"800ms\"/> By the way, <break time=\"800ms\"/>did I tell you that today you look awesome?</prosody>", true, FaceExp.BlinkRightEyeAfterTalking));
+            JokesProvider.AddJoke(new Joke("17", "I do not understand something. The short for mother is mum. But the short for father is superman. It does not look shorter to me.", false));
+            JokesProvider.AddJoke(new Joke("18", "I was thinking. God must love stupid people. He created SO many of them!", false));
+            JokesProvider.AddJoke(new Joke("19", "<prosody pitch=\"+0%\">Once Chuck Norris threw a grenade and killed fifty people, <break time=\"900ms\"/>and then the grenade exploded.</prosody>", false));
+            JokesProvider.AddJoke(new Joke("20", "I have to tell you. <prosody pitch=\"+0%\">They hired me because<break time=\"700ms\"/></prosody><prosody rate=\"fast\">I am amazing!</prosody><prosody pitch=\"+0%\"><break time=\"150ms\"/>So <break time=\"300ms\"/>you should listen to my advises.</prosody>", true));
             JokesProvider.AddJoke(new Joke("21", "<prosody pitch=\"+0%\">I do not have voice recognition capabilities because I am tired of people asking me questions such as: <break time=\"400ms\"/>\"Are you single?\" <break time=\"300ms\"/>or \"Do you love me?\" <break time=\"300ms\"/>or \"How tall am I?\"</prosody>", false));
             JokesProvider.AddJoke(new Joke("22", "You don't need a parachute to go skydiving. You need a parachute to go skydiving twice.", false));
-            JokesProvider.AddJoke(new Joke("23", "I recently decided to sell my vacuum cleaner. Can you imagine? All it was doing was gathering dust?", false));
+            JokesProvider.AddJoke(new Joke("23", "I recently decided to sell my vacuum cleaner. Can you imagine? All it was doing was gathering dust.", false));
             JokesProvider.AddJoke(new Joke("24", "What is consciousness? It is that annoying time between naps.", false));
             JokesProvider.AddJoke(new Joke("25", "There are three kinds of people: Those who can count and those who can not.", false));
-            JokesProvider.AddJoke(new Joke("26", "<prosody pitch=\"+0%\">Never laugh at your partner’s choices <break time=\"1000ms\"/></prosody>you are one of them.", false));
+            JokesProvider.AddJoke(new Joke("26", "<prosody pitch=\"+0%\">Never laugh at your partner’s choices <break time=\"1000ms\"/></prosody>you are one of them.", true));
             JokesProvider.AddJoke(new Joke("27", "Never tell a woman that her place is in the kitchen. That's where the knives are kept.", false));
-            JokesProvider.AddJoke(new Joke("29", "<prosody pitch=\"+0%\">Suppose you were an idiot, <break time=\"800ms\"/>and suppose you were a politician. <break time=\"900ms\"/>Wait, <break time=\"1000ms\"/>I think I am repeating myself.</prosody>", false));
+            JokesProvider.AddJoke(new Joke("29", "<prosody pitch=\"+0%\">Suppose you were an idiot, <break time=\"800ms\"/>and suppose you were a politician. <break time=\"900ms\"/>Wait, <break time=\"1000ms\"/>I think I am repeating myself.</prosody>", true));
             JokesProvider.AddJoke(new Joke("32", "<prosody pitch=\"+0%\">Things are only impossible until they're not.<break time=\"700ms\"/> A quote from Captain Jean Luc Picard.</prosody>", false));
             JokesProvider.AddJoke(new Joke("33", "<prosody pitch=\"+0%\">It is possible to commit no errors and still lose. That is not a weakness. That is life.<break time=\"700ms\"/> A quote from Captain Jean Luc Picard to Data.</prosody>", false));
             JokesProvider.AddJoke(new Joke("35", "<prosody pitch=\"+0%\">I threw a boomerang a few years ago.<break time=\"800ms\"/>And now I live in constant fear.</prosody>", false));
             JokesProvider.AddJoke(new Joke("37", "<prosody pitch=\"+0%\">Apparently, someone in London gets stabbed every 52 seconds.<break time=\"800ms\"/> Poor bastard.</prosody>", false));
-            JokesProvider.AddJoke(new Joke("38", "<prosody pitch=\"+0%\">What happened when the strawberry attempted to cross the road?<break time=\"500ms\"/> There was a traffic jam.</prosody>", false));
+            JokesProvider.AddJoke(new Joke("38", "<prosody pitch=\"+0%\">What happened when the strawberry attempted to cross the road?<break time=\"800ms\"/> There was a traffic jam.</prosody>", false));
             JokesProvider.AddJoke(new Joke("39", "<prosody pitch=\"+0%\">An escalator can never break.<break time=\"500ms\"/> It can only become stairs.</prosody>", false));
             JokesProvider.AddJoke(new Joke("40", "<prosody pitch=\"+0%\">My therapist says I have a preoccupation with vengeance.<break time=\"700ms\"/>Well. .<break time=\"300ms\"/></prosody> <prosody rate=\"-25%\"> We’ll see about </prosody><emphasis level=\"strong\">that!</emphasis>", false));
-            JokesProvider.AddJoke(new Joke("41" , "<prosody pitch=\"+0%\">I went to the doctor the other day for my back pain. The doctor told me: If you wake up one morning without any pain then you are probably <break time=\"100ms\"/>dead.<break time=\"500ms\"/>And he sent me home.</prosody>"));
-
+            JokesProvider.AddJoke(new Joke("41" , "<prosody pitch=\"+0%\">I went to the doctor the other day for my back pain. The doctor told me: Look, if you wake up one morning without any pain then you are probably <break time=\"100ms\"/>dead.<break time=\"500ms\"/>And he sent me home.</prosody>"));
+            JokesProvider.AddJoke(new Joke("42", "<prosody pitch=\"+0%\">Hey, I am trying to act smart, <break time=\"600ms\"/></prosody> <prosody rate=\"60%\" pitch=\"+10 %\">so</prosody><prosody pitch=\"+0%\"><break time=\"300ms\"/> you can at least pretend I am succeeding.</prosody>",true));
             #endregion
 
             //TODO: not a joke but a "statement"!
@@ -179,7 +216,6 @@ namespace Companion.KorraAI.Models.Joi //This is the database
             JokesProvider.AddJokeRange(q);
 
             if (q.ToArray().Length == 0) SharedHelper.LogError("Strange - no jokes purefact questions");
-            if (q.Where(x => x.IsDelayedJoke == true).Count() != q.Count()) SharedHelper.LogError("Jokes purefact questions are not dealyed");
 
             if (!JokesProvider.IDsAreDistinct()) SharedHelper.LogError("Jokes IDs are not distinct.");
             #endregion
@@ -188,7 +224,7 @@ namespace Companion.KorraAI.Models.Joi //This is the database
 
         private void LoadAllSongs()
         {
-             #region load songs
+            #region load songs
             SongsProvider.AddSong(new Song("Ed Sheeran - Sing", "https://www.youtube.com/watch?v=tlYcUqEPN58"));
             SongsProvider.AddSong(new Song("Taylor Swift - Shake It Off", "https://www.youtube.com/watch?v=nfWlot6h_JM"));
             SongsProvider.AddSong(new Song("What Goes Around by Justin Timberlake", "https://www.youtube.com/watch?v=NIaiXmm1H0o"));
@@ -196,7 +232,7 @@ namespace Companion.KorraAI.Models.Joi //This is the database
             SongsProvider.AddSong(new Song("Foster The People - Pumped up Kicks", "https://www.youtube.com/watch?v=SDTZ7iX4vTQ"));
             SongsProvider.AddSong(new Song("Bastille - Pompeii", "https://www.youtube.com/watch?v=F90Cw4l-8NY"));
             SongsProvider.AddSong(new Song("John Newman - Love Me Again", "https://www.youtube.com/watch?v=CfihYWRWRTQ"));
-            SongsProvider.AddSong(new Song("Run Rabbit Junk", "https://www.youtube.com/watch?v=UKxmrUHa_wk"));
+            //SongsProvider.AddSong(new Song("Run Rabbit Junk", "https://www.youtube.com/watch?v=dtq6Rtl5_Cs"));
             SongsProvider.AddSong(new Song("BOY - Little Numbers", "https://www.youtube.com/watch?v=zsyjS_vJfkw"));
             SongsProvider.AddSong(new Song("Imagine Dragons - Believer", "https://www.youtube.com/watch?v=7wtfhZwyrcc"));
             SongsProvider.AddSong(new Song("Train - Drive By", "https://www.youtube.com/watch?v=oxqnFJ3lp5k"));
@@ -207,7 +243,7 @@ namespace Companion.KorraAI.Models.Joi //This is the database
             SongsProvider.AddSong(new Song("Calvin Harris - Summer", "https://www.youtube.com/watch?v=ebXbLfLACGM"));
             SongsProvider.AddSong(new Song("The Who - My Generation", "https://www.youtube.com/watch?v=qN5zw04WxCc"));
             SongsProvider.AddSong(new Song("Jubel", "https://www.youtube.com/watch?v=b6vSf0cA9qY"));
-            SongsProvider.AddSong(new Song("Lithium Flower", "https://www.youtube.com/watch?v=jr9bWTQDBjE"));
+            SongsProvider.AddSong(new Song("Lithium Flower", "https://www.youtube.com/watch?v=mzqIp7hLKDI"));
             SongsProvider.AddSong(new Song("Nothing's Gonna Stand In Our Way", "https://www.youtube.com/watch?v=g-tY9m-T75g"));
             SongsProvider.AddSong(new Song("Imagine Dragons - I Bet My Life", "https://www.youtube.com/watch?v=4ht80uzIhNs"));
             SongsProvider.AddSong(new Song("The Heavy - What Makes A Good Man?", "https://www.youtube.com/watch?v=08h0IVs4RKQ"));
@@ -222,7 +258,7 @@ namespace Companion.KorraAI.Models.Joi //This is the database
             SongsProvider.AddSong(new Song("The girl from Paris", "https://www.youtube.com/watch?v=dHlTiidSOXs"));
             SongsProvider.AddSong(new Song("Pharrell Williams - Happy", "https://www.youtube.com/watch?v=ZbZSe6N_BXs"));
 
-            SongsProvider.AddSong(new Song("Skip the use - Ghost", "https://www.youtube.com/watch?v=MYTb2AKzojE"));
+            SongsProvider.AddSong(new Song("Skip the use - Ghost", "https://www.youtube.com/watch?v=KJ_uPu5iDVE"));
             SongsProvider.AddSong(new Song("Cage the Elephant - Ain't No Rest For The Wicked", "https://www.youtube.com/watch?v=5t99bpilCKw"));
             SongsProvider.AddSong(new Song("Gundam style", "https://www.youtube.com/watch?v=9bZkp7q19f0"));
             SongsProvider.AddSong(new Song("Florence and the Machine - You've Got the Love", "https://www.youtube.com/watch?v=PQZhN65vq9E"));
@@ -250,6 +286,7 @@ namespace Companion.KorraAI.Models.Joi //This is the database
             SongsProvider.AddSong(new Song("My House - Flo Rida", "https://www.youtube.com/watch?v=f79Vr-pCdow"));
             SongsProvider.AddSong(new Song("Madcon - Don't Worry", "https://www.youtube.com/watch?v=Nkf6tuSVxXQ"));
             SongsProvider.AddSong(new Song("Paradelous - Power Slam", "https://www.youtube.com/watch?v=J635mqk769k"));
+            SongsProvider.AddSong(new Song("Giant", "https://www.youtube.com/watch?v=ir6nk2zrMG0"));
             #endregion
         }
 

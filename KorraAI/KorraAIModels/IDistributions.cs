@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProbCSharp;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,12 +10,19 @@ namespace Companion.KorraAI.Models
     public interface IDistributions
     {
         /// <summary>
+        /// There are several versions of the smile face expressions
+        /// </summary>
+        /// <returns></returns>
+        int NextSmileVersion();
+
+        /// <summary>
         /// Returns the pause (time interval) between two interactions (of any type)
         /// </summary>
         /// <returns>the time in seconds</returns>
-        float GetNextInteactionPause();
+        float GetNextInteactionPause(bool isReacting);
 
         /// <summary>
+        /// Smile is performed at regular intervals, time between smiles varies.
         /// Returns the pause (time interval) between two smiles
         /// </summary>
         /// <returns>the time in seconds</returns>
@@ -46,5 +54,7 @@ namespace Companion.KorraAI.Models
         /// <param name="values"></param>
         /// <param name="lastOutfitUsed"></param>
         void ForceGenerateOutfits(int[] values, int lastOutfitUsed);
+
+        PrimitiveDist<string> JokesDistribution(PureFact factEasilyOffended, bool romanticJokesFirst, bool romanticJokesLast);
     }
 }

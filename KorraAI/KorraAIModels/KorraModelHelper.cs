@@ -127,5 +127,104 @@ namespace Companion.KorraAI.Models
                 return true;
             else return false;
         }
+
+        public static int GetItemsLeftForCategory(string category)
+        {
+            if (category == ActionsEnum.AskPureFactQuestionAboutUser)
+            {
+                var q = (from pf in PureFacts.GetList()
+                         where pf.Type == PureFactType.AboutUser && pf.IsPlanned == false && pf.IsUsed == false
+                         select pf).ToArray();
+
+                return q.Length;
+            }
+            else
+            if (category == ActionsEnum.SharePureFactInfoAboutBot)
+            {
+                var q = (from pf in PureFacts.GetList()
+                         where pf.Type == PureFactType.AboutBot && pf.IsPlanned == false && pf.IsUsed == false
+                         select pf).ToArray();
+
+                return q.Length;
+            }
+            else
+            {
+                SharedHelper.LogError("GetItemsLeftForCategory: action category currently not supported");
+                return 0;
+            }
+        }
+
+        public static void CoupleTwoInteractionsTogether(ref List<CommItem> list, string name1, string name2)
+        {
+            int p = 0;
+            int itemNamePos1 = -1;
+            int itemNamePos2 = -1;
+
+            for (p = 0; p < list.Count; p++)
+            {
+                if (list[p].IsPureFact)
+                {
+                    if (list[p].Name == name1) itemNamePos2 = p;
+                    if (list[p].Name == name2) itemNamePos1 = p;
+                    if (itemNamePos2 != -1 && itemNamePos1 != -1) break;
+                }
+            }
+
+            if (itemNamePos2 != -1 && itemNamePos1 != -1 && (Math.Abs(itemNamePos2 - itemNamePos1) != 1))
+            {
+                int pos1 = Math.Min(itemNamePos1, itemNamePos2);
+                int pos2 = Math.Max(itemNamePos1, itemNamePos2);
+
+                var temp = list[pos2];
+                list.RemoveAt(pos2);
+                list.Insert(pos1 + 1, temp);
+
+                SharedHelper.Log("Two interactions were coupled together: " + name1 + " and " + name2);
+
+                //string DebugItem = "";
+                //int i = 0;
+                //foreach (string e in interactions.Select(e => e.TextToSay))
+                //{
+                //    i++;
+                //    DebugItem += "|" + i + ". " + e;
+                //}
+                //SharedHelper.LogWarning("Interactions list: " + DebugItem);
+            }
+        }
+
+        public static void RemoveInteraction(ref List<CommItem> list, int position)
+        {
+            if (position < list.Count)
+            {
+                CommItem tobeRemoved = list[position];
+
+                if (tobeRemoved.Action == ActionsEnum.MakeSuggestion && tobeRemoved.Suggestion == SuggestionsEnum.ListenToSong)
+                {
+                    string songName = list[position].Name;
+                    list.RemoveAt(position);
+
+                    SongsProvider.SetSongAsPlanned(songName, false);
+                    SharedHelper.Log("Interaction removed: " + tobeRemoved.Name);
+                }
+                else SharedHelper.LogError("Removing this type of interaction from the list of planned interactions is currently NOT supported.");
+            }
+            else SharedHelper.LogError("Could not remove interaction at position: " + position);
+
+        }
+
+        public static void SetFacialExpressionFlag(string exp)
+        {
+            if (!string.IsNullOrEmpty(exp))
+            {
+                if (exp == FaceExp.SmileAfterTalking) FlagsShared.RequestSmileAfterTalkingDone = true;
+                else
+                if (exp == FaceExp.SurpriseOnStartTalking) FlagsShared.RequestSurpriseExpression = true;
+                else
+                if (exp == FaceExp.BlinkRightEyeAfterTalking) FlagsShared.RequestRightEyeBlink = true;
+                else
+                if (exp == FaceExp.FlirtingAfterTalking) FlagsShared.RequestFlirtingExpression = true;
+            }
+            else SharedHelper.LogError("Unknown face expression requested: '" + exp + "'");
+        }
     }
 }

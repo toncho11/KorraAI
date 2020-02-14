@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace Companion.KorraAI
 {
-    public class Joke
+    public class Joke : Item
     {
         public Joke(string text, bool isDelayed) //TODO: add 'doesNeedAnnouncement'
         {
             Name = Guid.NewGuid().ToString();
             Text = text;
             IsUsed = false;
-            IsDelayedJoke = isDelayed;
+            //IsDelayedJoke = isDelayed;
             IsPureFact = false;
         }
 
@@ -23,7 +23,7 @@ namespace Companion.KorraAI
             Text = text;
             IsUsed = false;
 
-            IsDelayedJoke = false;
+            //IsDelayedJoke = false;
             IsPureFact = false;
         }
 
@@ -33,7 +33,7 @@ namespace Companion.KorraAI
             Text = text;
             IsUsed = false;
 
-            IsDelayedJoke = false;
+            //IsDelayedJoke = false;
             IsPureFact = false;
         }
 
@@ -42,8 +42,28 @@ namespace Companion.KorraAI
             Name = name;
             Text = text;
             IsUsed = false;
-            IsDelayedJoke = isDelayed;
+            //IsDelayedJoke = isDelayed;
             IsPureFact = false;
+        }
+
+        public Joke(string name, string text, bool isDelayed, string faceExp)
+        {
+            Name = name;
+            Text = text;
+            IsUsed = false;
+            //IsDelayedJoke = isDelayed;
+            IsPureFact = false;
+            FaceExpression = faceExp;
+        }
+
+        public Joke(string name, string text, ContentType type, string faceExp)
+        {
+            Name = name;
+            Text = text;
+            IsUsed = false;
+            ContentType = type;
+            IsPureFact = false;
+            FaceExpression = faceExp;
         }
 
         public Joke(string name, string text, bool isDelayed, bool isPureFact, UIAnswer pureFactUI)
@@ -51,23 +71,29 @@ namespace Companion.KorraAI
             Name = name;
             Text = text;
             IsUsed = false;
-            IsDelayedJoke = isDelayed;
+            //IsDelayedJoke = isDelayed;
             IsPureFact = isPureFact;
             PureFactUI = pureFactUI;
         }
 
-        public string Name;
-        public string Text;
+        public Joke(string name, string text, ContentType type)
+        {
+            Name = name;
+            Text = text;
+            IsUsed = false;
+            ContentType = type;
+            IsPureFact = false;
+        }
 
-        public bool IsUsed; //already said
-        public bool IsPlanned; //already scheduled
+        //public string Name { get; set; }
+        public string Text;
 
         //For men
         //For women
         //Only for parents
 
         //Some jokes are not appropriate in the beginning
-        public bool IsDelayedJoke;
+        //public bool IsDelayedJoke;
 
         //public bool DoesNeedAnnouncement;
         #region Pure Fact Joke
@@ -75,9 +101,11 @@ namespace Companion.KorraAI
 
         public UIAnswer PureFactUI;
         #endregion
+
+        public string FaceExpression;
     }
 
-    public class Song
+    public class Song : Item
     {
         public Song(string name, string url)
         {
@@ -85,11 +113,8 @@ namespace Companion.KorraAI
             Url = url;
         }
 
-        public string Name;
+        //public string Name { get; set; }
         public string Url;
-
-        public bool IsUsed; //already said
-        public bool IsPlanned; //already scheduled
 
         public string GetID
         {
@@ -106,7 +131,7 @@ namespace Companion.KorraAI
         }
     }
 
-    public class Sport
+    public class Sport : Item
     {
         public Sport(string text)
         {
@@ -115,14 +140,11 @@ namespace Companion.KorraAI
             IsUsed = false;
         }
 
-        public string Name;
+        //public string Name { get; set; }
         public string Text;
-
-        public bool IsUsed; //already said
-        public bool IsPlanned; //already scheduled
     }
 
-    public class Movie
+    public class Movie : Item
     {
         public Movie(string text, bool isTVSeries, bool isReleased)
         {
@@ -142,16 +164,14 @@ namespace Companion.KorraAI
             IsReleased = isReleased;
         }
 
-        public string Name;
+        //public string Name { get; set; }
         public string Text;
 
-        public bool IsUsed; //already said
-        public bool IsPlanned; //already scheduled
         public bool IsTvSeries;
         public bool IsReleased;
     }
 
-    public class Buy
+    public class Buy : Item
     {
         public Buy(string text)
         {
@@ -160,10 +180,17 @@ namespace Companion.KorraAI
             IsUsed = false;
         }
 
-        public string Name;
+        //public Buy(string text, string faceExp)
+        //{
+        //    Name = Guid.NewGuid().ToString();
+        //    Text = text;
+        //    IsUsed = false;
+        //    FaceExpression = faceExp;
+        //}
+
+        //public string Name { get; set; }
         public string Text;
 
-        public bool IsUsed; //already said
-        public bool IsPlanned; //already scheduled
+        //public string FaceExpression;
     }
 }

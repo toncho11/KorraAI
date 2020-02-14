@@ -18,9 +18,9 @@ namespace Companion
 
         public static string ChangeVisualAppearance { get { return "ChangeVisualAppearance"; } }
 
-        public static string MakeGeneralStatement { get { return "MakeGeneralStatement"; } } //currently not sampled, only manually created
+        public static string MakeGeneralStatement { get { return "MakeGeneralStatement"; } } //currently not sampled, only manually used
 
-        public static string MakeBuyStatement { get { return "MakeBuyStatement"; } } //currently not sampled, only manually created
+        public static string MakeBuyStatement { get { return "MakeBuyStatement"; } } //currently not sampled, only manually used
 
         public static string ExpressMentalState { get { return "ExpressingMentalState"; } }
     }
@@ -40,12 +40,34 @@ namespace Companion
         public static string GoToGym { get { return "SuggestGoToGym"; } }
     }
 
-    public enum PureFactType { AboutBot, AboutUser, UIQuestion, JokeQuestion, BuyQuestion };
+    public enum PureFactType
+    {
+      AboutBot,
+      AboutUser,
+      UIQuestion,
+      JokeQuestion,
+      BuyQuestion,
+      System
+    };
 
-    public enum Lang { JA, EN, AUTOMATIC };
+    public enum Lang { JA, EN, FR, AUTOMATIC };
 
     /// <summary>
     /// Probabilistic variable 
     /// </summary>
     public enum PV { Default=0, Current=1, Descreased=2, Increased=3};
+
+    public struct FaceExp
+    {
+        public static string SmileAfterTalking { get { return "Smile"; } }
+
+        public static string SurpriseOnStartTalking { get { return "Surprise"; } }
+
+        public static string FlirtingAfterTalking { get { return "Flirting"; } }
+
+        public static string BlinkRightEyeAfterTalking { get { return "BlinkRightEye"; } }
+
+        //public static string Disbelief { get { return "Disbelief"; } } //TODO: NOT IMPLEMENTED
+
+    }
 }

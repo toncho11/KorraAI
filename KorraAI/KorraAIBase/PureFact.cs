@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace Companion.KorraAI
 {
-    public delegate string PureFactResponseFunction(string value,out bool isValid);
+    public delegate string PureFactResponseFunction(string value, out bool isValid, out string faceExpr);
     public delegate string PureFactQuestionFunction();
 
     /// <summary>
-    /// Facts that are true for a long time
+    /// A pure fact is a information that is exact such as: yes/no, age, distance, height, location ...
     /// </summary>
-    public class PureFact
+    public class PureFact : Item
     {
         public PureFact(string p_Name, PureFactType p_type, PureFactQuestionFunction p_question, string[] p_AllPossibleAnswers, UIAnswer p_UI)
         {
@@ -68,18 +68,22 @@ namespace Companion.KorraAI
             ResponseFunc = pf;
         }
 
-        public PureFact(string p_Name, PureFactType p_type, string p_Question, string[] p_AllPossibleAnswers, PureFactResponseFunction p_response, UIAnswer p_UI)
+        public PureFact(string p_Name, PureFactType p_type, string p_Question, string[] p_AllPossibleAnswers, PureFactResponseFunction p_response, UIAnswer p_UI, ContentType type)
         {
             Name = p_Name;
             Type = p_type;
             question = p_Question;
             AllPossibleAnswers = p_AllPossibleAnswers;
             UI = p_UI;
+            ContentType = type;
 
             ResponseFunc = p_response;
         }
+       
 
-        public PureFact(string p_Name, PureFactType p_type, string p_Question, string[] p_AllPossibleAnswers, string p_Acknowledgement, UIAnswer p_UI, string p_StatementOnPositiveResponse, string p_StatementOnNegativeResponse)
+        public PureFact(string p_Name, PureFactType p_type, string p_Question, string[] p_AllPossibleAnswers,
+                        string p_Acknowledgement, UIAnswer p_UI, string p_StatementOnPositiveResponse,
+                        string p_StatementOnNegativeResponse, ContentType type)
         {
             Name = p_Name;
             Type = p_type;
@@ -87,14 +91,38 @@ namespace Companion.KorraAI
             AllPossibleAnswers = p_AllPossibleAnswers;
             Acknowledgement = p_Acknowledgement;
             UI = p_UI;
+            ContentType = type;
 
             statementOnPositiveResponse = p_StatementOnPositiveResponse;
             statementOnNegativeResponse = p_StatementOnNegativeResponse;
 
             ResponseFunc = null;
+
+
         }
 
-        public string Name = "";
+        public PureFact(string p_Name, PureFactType p_type, string p_Question, string[] p_AllPossibleAnswers,
+                        string p_Acknowledgement, UIAnswer p_UI, string p_StatementOnPositiveResponse,
+                        string p_StatementOnNegativeResponse, ContentType type, string FacialExpressionOnPositiveResponseFromUser, string FacialExpressionOnNegativeResponseFromUser)
+        {
+            Name = p_Name;
+            Type = p_type;
+            question = p_Question;
+            AllPossibleAnswers = p_AllPossibleAnswers;
+            Acknowledgement = p_Acknowledgement;
+            UI = p_UI;
+            ContentType = type;
+
+            statementOnPositiveResponse = p_StatementOnPositiveResponse;
+            statementOnNegativeResponse = p_StatementOnNegativeResponse;
+
+            ResponseFunc = null;
+
+            FacialExpressionOnPositiveResponse = FacialExpressionOnPositiveResponseFromUser;
+            FacialExpressionOnNegativeResponse = FacialExpressionOnNegativeResponseFromUser;
+        }
+
+        //public string Name { get; set; }
 
         public bool IsFactAboutTheBot = false;
 
@@ -121,13 +149,19 @@ namespace Companion.KorraAI
             }
         }
 
-        public string Value = "";
-
-        public string Acknowledgement = ""; //not used?
-
-        public bool IsUsed = false;
-
-        public bool IsPlanned = false;
+        string value;
+        public string Value
+        {
+            get
+            {
+                return value;
+            }
+            set
+            {
+                this.value = value;
+                LastUpdated = DateTime.Now;
+            }
+        }
 
         public UIAnswer UI;
 
@@ -135,56 +169,51 @@ namespace Companion.KorraAI
 
         public string[] AllPossibleAnswers;
 
+        #region Bot's speech responses
+
+        public string Acknowledgement = ""; //used by SharePureFactInfoAboutBot
+
         string statementOnPositiveResponse;
-        public string StatementOnPositiveResponse
-        {
-            get
-            {
-                bool isValid = true;
-
-                if (!IsAnswered && ResponseFunc != null) SharedHelper.LogError("Trying to use processing function on unanswered question.");
-
-                if (ResponseFunc != null)
-                    statementOnPositiveResponse = ResponseFunc(Value, out isValid);
-
-                IsFuncValidationError = !isValid;
-
-                return statementOnPositiveResponse;
-            }
-
-            set
-            {
-                if (ResponseFunc != null) SharedHelper.LogError("Trying to set a value even if a custom processing function exists.");
-
-                statementOnPositiveResponse = value;
-            }
-        }
 
         string statementOnNegativeResponse;
-        public string StatementOnNegativeResponse
+
+        public string GetResponse(out string facialExpression, out bool IsResponseValid)
         {
-            get
+            // it either returns a predefined response or
+            // if available it executes the ResponseFunc to obtain one
+
+            string result = "";
+            facialExpression = "";
+
+            if (!string.IsNullOrEmpty(Acknowledgement))
             {
-                bool isValid = true;
-
-                if (!IsAnswered && ResponseFunc != null) SharedHelper.LogError("Trying to use processing function on unanswered question.");
-
-                if (ResponseFunc != null)
-                    statementOnNegativeResponse = ResponseFunc(Value, out isValid);
-
-                IsFuncValidationError = !isValid;
-                return statementOnNegativeResponse;
+                result = Acknowledgement;
             }
 
-            set
+            if (!string.IsNullOrEmpty(statementOnPositiveResponse) && HumanEmulator.CurrentAIModel.GetContext().Phrases.IsYes(Value))
             {
-                if (ResponseFunc != null) SharedHelper.LogError("Trying to set a value even if a custom processing function exists.");
-
-                statementOnNegativeResponse = value;
+                result = statementOnPositiveResponse;
+                facialExpression = FacialExpressionOnPositiveResponse;
             }
+
+            if (!string.IsNullOrEmpty(statementOnNegativeResponse) && HumanEmulator.CurrentAIModel.GetContext().Phrases.IsNo(Value))
+            {
+                result = statementOnNegativeResponse;
+                facialExpression = FacialExpressionOnNegativeResponse;
+            }
+
+            IsResponseValid = true;
+
+            //overrides
+            if (!IsAnswered && ResponseFunc != null) SharedHelper.LogError("Trying to use processing function on unanswered question.");
+
+            if (ResponseFunc != null)
+                result = ResponseFunc(Value, out IsResponseValid, out facialExpression);
+
+            return result;
         }
 
-        public bool IsDelayed; //currently not used
+        #endregion
 
         public PureFactResponseFunction ResponseFunc;
         public PureFactQuestionFunction QuestionFunc;
@@ -192,7 +221,18 @@ namespace Companion.KorraAI
         /// <summary>
         /// The StatementOnPositiveResponse and StatementOnNegativeResponse modify this value
         /// </summary>
-        public bool IsFuncValidationError;
+        //public bool IsFuncValidationErrorDetected;
 
+        public DateTime LastUpdated { get; private set; }
+
+        #region Facial Expressions
+
+        public string FacialExpressionOnPositiveResponse;
+
+        public string FacialExpressionOnNegativeResponse;
+
+        //public string FacialExpressionOnReaction;
+
+        #endregion
     }
 }

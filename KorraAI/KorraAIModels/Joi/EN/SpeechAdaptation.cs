@@ -57,6 +57,13 @@ namespace Companion.KorraAI.Models.Joi
                     list[i] = item;
                 }
             }
+
+            DisablePlayMusicAftertInitialGreeting(ref list);
+
+            KorraModelHelper.CoupleTwoInteractionsTogether(ref list, "UserName", "BotName");
+
+            KorraModelHelper.CoupleTwoInteractionsTogether(ref list, "UserLikesVideoGames", "UserThinksVideoGameIsGoodPresent");
+
             return new Queue<CommItem>(list);
         }
 
@@ -67,15 +74,14 @@ namespace Companion.KorraAI.Models.Joi
 
             if (oneSongAlreadyPlanned || StatesShared.OneSongAlreadyPlayed)
             {
-                string value = KorraModelHelper.GetChance(new string[] { "I have a new song for you: ", "Another song: ", "You are going to like this tune: ", "Listen to this song: " }, lastSongAnnouncementUsed);
+                string value = KorraModelHelper.GetChance(new string[] { "I have a new song for you: ", "Another song: ", "You are going to like this tune: ", "Listen to this song: ", "I am going to play some music: " }, lastSongAnnouncementUsed);
                 lastSongAnnouncementUsed = value;
                 text += (value + originalText) + ".";
             }
             else
             {
-                if (KorraModelHelper.GetChance(2))
-                    text = ("I have a nice song for you: " + originalText + ".");
-                else text = ("Listen to this song: " + originalText + ".");
+                text += KorraModelHelper.GetChance(new string[] { "I have a nice song for you: ", "Listen to this song: ", "I am going to play some music: " });
+                text += originalText + ".";
 
                 text += " Please note that pressing " + ((FlagsShared.IsMobile) ? "Back button" : "Escape") + " at anytime will stop playback.";
             }
@@ -83,23 +89,23 @@ namespace Companion.KorraAI.Models.Joi
             return text;
         }
 
-        //public static string AddJokeAnnouncement(string originalText)
-        //{
-        //    string text = "";
-        //    System.Random rnd = new System.Random();
+        public static string AddJokeAnnouncement(string originalText)
+        {
+            string text = "";
 
-        //    int value = rnd.Next(0, 4);
+            string start = "<prosody pitch=\"+0%\">";
+            string pause = "<break time=\"800ms\"/>"; //maybe it should not be fixed
+            string end = "</prosody>";
 
-        //    switch (value)
-        //    {
-        //        case 0: text += ("Joke time. " + originalText); break; //TODO: add pause between the two
-        //        case 1: text += ("I would like to tell you a joke. " + originalText); break; //TODO: add pause between the two
-        //        case 2: text += (originalText + " That was a joke."); break; //TODO: add pause between the two
-        //        case 3: text += originalText; break; //nothing is added
-        //    }
+            text = KorraModelHelper.GetChance(new string[] {
+                                       start + "Joke time. " + pause + originalText + end,
+                                       start + "I would like to tell you a joke. " + pause + originalText + end,
+                                       start + originalText + pause + " OK, that was a joke." + end,
+                                       originalText
+                                      });
 
-        //    return text;
-        //}
+            return text;
+        }
 
         private string AddCallByName(string originalText)
         {
@@ -112,6 +118,16 @@ namespace Companion.KorraAI.Models.Joi
             else return originalText;
         }
 
-        
+        private void DisablePlayMusicAftertInitialGreeting(ref List<CommItem> list)
+        {
+            if (list.Count > 0
+                && list[0].IsGreeting
+                && list[1].Action == ActionsEnum.MakeSuggestion
+                && list[1].Suggestion == SuggestionsEnum.ListenToSong)
+            {
+                KorraModelHelper.RemoveInteraction(ref list, 1);
+            }
+        }
     }
 }
+

@@ -17,5 +17,13 @@ namespace Companion
         {
             get { return Application.platform == RuntimePlatform.Android || Application.platform == RuntimePlatform.IPhonePlayer; }
         }
+
+        public static bool RequestSmileAfterTalkingDone; //shows after talking is done
+
+        public static bool RequestSurpriseExpression; //shows when starts talking
+
+        public static bool RequestFlirtingExpression; //shows after talking is done
+
+        public static bool RequestRightEyeBlink; //shows after talking is done
     }
 }

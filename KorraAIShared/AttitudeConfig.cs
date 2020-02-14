@@ -9,7 +9,7 @@ namespace Companion
     /// <summary>
     /// Affect the behaviour of the bot
     /// </summary>
-    public static class AttitudeConfig
+    public static class Personality
     {
         ///// <summary>
         ///// Depictions or dialogue involving "adult" humor, including sexual references
@@ -34,7 +34,7 @@ namespace Companion
         /// <summary>
         /// Low frequency, intensity, or severity of references to sex or sexuality
         /// </summary>
-        public static bool MildSexualThemes;
+        public static bool UseMildSexualThemes;
 
         ///// <summary>
         ///// Brief and/or mild depictions of nudity
@@ -46,8 +46,15 @@ namespace Companion
         ///// </summary>
         //public static bool Nudity;
 
-        public static bool MildOffensiveJokes;
+        public static bool UseMildOffensiveJokes;
 
-        public static bool RomanticReferences;
+        public static bool UseRomanticReferences;
+
+        public static bool EnableOverReacting;
+
+        /// <summary>
+        /// Lowers thresholds for all encoded surprises
+        /// </summary>
+        public static bool IncreaseSurprise;
     }
 }

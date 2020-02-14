@@ -21,16 +21,26 @@ namespace Companion.KorraAI.Models.Joi
 
         public string SayHello()
         {
+            PureFact numberOfStarts = PureFacts.GetFacfByName("SystemStartsCount");
+            int numberOfStartsInt = Convert.ToInt32(numberOfStarts.Value);
+
             string text = "";
 
-            if (!string.IsNullOrEmpty(PureFacts.GetValueByName("UserName")))
+            if (!string.IsNullOrEmpty(PureFacts.GetValueByName("UserName"))) //we know how the user's name
             {
-                text = KorraModelHelper.GetChance(new string[] { "Hi", "Hello", "Hey",});
+                text = KorraModelHelper.GetChance(new string[] { "Hi", "Hello", "Hey", });
+
+                if (KorraModelHelper.GetChance(3) && numberOfStartsInt > 1 && (text == "Hi" || text == "Hello")) //again version
+                    text += " again";
+
                 text += " " + PureFacts.GetValueByName("UserName");
             }
-            else
+            else //we do NOT know how the user's name
             {
-                text = KorraModelHelper.GetChance(new string[] { "Hi", "Hello", "Hey", "Hello there", "Hey buddy" });
+                if (KorraModelHelper.GetChance(3) && numberOfStartsInt > 1)
+                    text = KorraModelHelper.GetChance(new string[] { "Hi again", "Hello again", }); //again version
+                else
+                    text = KorraModelHelper.GetChance(new string[] { "Hi", "Hello", "Hey", "Hello there", "Hey buddy" });
             }
             return text;
         }
@@ -60,7 +70,6 @@ namespace Companion.KorraAI.Models.Joi
             return "<prosody pitch=\"+0%\">I am a nice looking lady.<break time=\"700ms\"/> Just admit it.</prosody>";
         }
 
-        //Avoid last one used? YES
         public string ChangeClothesAnnouncement()
         {
             string text = KorraModelHelper.GetChance(new string[] { "I am going to change my clothes. I feel better like this.", "Time for another outfit.", "Time for some change!", "I am in a mood to change my outfit." }, lastClothesAnnouncementUsed);
@@ -68,10 +77,11 @@ namespace Companion.KorraAI.Models.Joi
             return text;
         }
 
-        //Avoid last one used? YES
         public string GoOutAnnoucement()
         {
-            bool userWorks = this.IsYes(PureFacts.GetValueByName("UserHasJob"));
+            PureFact factJob = PureFacts.GetFacfByName("UserHasJob");
+
+            bool userWorks = factJob.IsAnswered && this.IsYes(factJob.Value);
 
             var options = (new string[]
                          { "You should go out this evening with your friends.",
@@ -119,6 +129,9 @@ namespace Companion.KorraAI.Models.Joi
             if (KorraModelHelper.GetChance(5))
                 text += " It is really good. You will thank me later.";
 
+            if (KorraModelHelper.GetChance(10))
+                text += " It is one of my favorite.";
+
             return text;
         }
 
@@ -144,7 +157,7 @@ namespace Companion.KorraAI.Models.Joi
 
         public string VideoPlaybackError()
         {
-            string value = KorraModelHelper.GetChance(new string[] { "Sorry. Music playback did not work.", "Oops. There was a problem with music playback.",}, lastMusicFailure);
+            string value = KorraModelHelper.GetChance(new string[] { "Sorry. Music playback did not work.", "Oops. There was a problem with music playback.", }, lastMusicFailure);
 
             lastMusicFailure = value;
             if (KorraModelHelper.GetChance(3))
@@ -183,18 +196,24 @@ namespace Companion.KorraAI.Models.Joi
             return "No";
         }
 
-        public string ProcessAge(string value, out bool isValid)
+        public string ProcessAge(string value, out bool isValid, out string faceExpr)
         {
             int result;
             isValid = Int32.TryParse(value, out result);
+            faceExpr = "";
 
             if (!isValid)
             {
+                //FlagsShared.RequestSurpriseExpression = true;
+                faceExpr = FaceExp.SurpriseOnStartTalking;
                 return "Sorry, I could not get your age.";
             }
 
             if (isValid && result <= 10)
             {
+                //FlagsShared.RequestSurpriseExpression = true;
+                //faceExpr = FaceExp.SurpriseOnStartTalking;
+                faceExpr = FaceExp.SurpriseOnStartTalking;
                 return "Wow, Aren't you a bit young?";
             }
             else if (isValid && result > 10 && result <= 19)
@@ -203,6 +222,8 @@ namespace Companion.KorraAI.Models.Joi
             }
             else if (isValid && result > 99) //TODO: put a surprise face
             {
+                //FlagsShared.RequestSurpriseExpression = true;
+                faceExpr = FaceExp.SurpriseOnStartTalking;
                 return "No kidding... That sounds like a lot! Are you sure about that?";
             }
 
@@ -260,11 +281,12 @@ namespace Companion.KorraAI.Models.Joi
         /// </summary>
         /// <param name="value">is the answer to question: UserRelationshipFirstStep</param>
         /// <returns></returns>
-        public string ProcessNationality(string value, out bool isValid)
+        public string ProcessNationality(string value, out bool isValid, out string faceExpr)
         {
             bool validNationality = KorraModelHelper.CheckValidNationality(value);
 
             isValid = true;
+            faceExpr = "";
 
             bool validCountryName = false;
             if (!validNationality)
@@ -276,6 +298,8 @@ namespace Companion.KorraAI.Models.Joi
 
             if (!validNationality && !validCountryName && !uk.Contains(value.ToLower()) && !sc.Contains(value.ToLower()))
             {
+                //FlagsShared.RequestSurpriseExpression = true;
+                faceExpr = FaceExp.SurpriseOnStartTalking;
                 isValid = false;
                 return "Sorry, I could not understand your nationality.";
             }
@@ -300,9 +324,10 @@ namespace Companion.KorraAI.Models.Joi
             }
         }
 
-        public string ProcessMarried(string value, out bool isValid)
+        public string ProcessMarried(string value, out bool isValid, out string faceExpr)
         {
             isValid = true;
+            faceExpr = "";
 
             if (IsNo(value))
                 return "<prosody pitch=\"+0%\">Good. <break time=\"700ms\"/> We will fix that.</prosody>";
@@ -318,5 +343,116 @@ namespace Companion.KorraAI.Models.Joi
             return text;
         }
 
+        public string MovieSuggestions()
+        {
+            string text = KorraModelHelper.GetChance(new string[] { "I will have some suggestions for you later today.", "Later I can recommend you a few good ones." });
+
+            return text;
+        }
+
+        public string SurpriseVideoGames(int surprise, bool LikesGamesAskedFirst)
+        {
+            if (surprise == 1)
+            {
+                return "I had the impression, you will like video games.";
+            }
+            else if (surprise == 2)
+            {
+                //2
+                //LVG No
+                //Present Yes
+                //inference on: LVG
+                if (LikesGamesAskedFirst)
+                    return "But you still do not like computer games.";
+                //Present Yes
+                //LVG No
+                else return "Hmm, I thought you would like video games if you approve a video game as a present.";
+            }
+            else if (surprise == 3)
+            {
+                //3
+                //LVG Yes
+                //Present No
+                //inference on: present
+
+                if (LikesGamesAskedFirst)
+                    return "Strange. I though you will like a video game as a present.";
+
+                //Present No
+                //LVG Yes
+                //inference on: present
+                else return "Hmm, But you still think a video game is not a good present.";
+            }
+            else
+            {
+                SharedHelper.LogError("Could not generate appropriate video game text to express surprise.");
+                return "";
+            }
+        }
+
+        public string ProcessHasKids(string value, out bool isValid, out string faceExpr)
+        {
+            isValid = true;
+            faceExpr = "";
+
+            if (IsYes(value))
+                return "<prosody pitch=\"+0%\">Only a person who has kids knows how hard it is,<break time=\"800ms\"/> but it is also a lot of fun.</prosody>";
+            else return "";
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value">is the answer to question: UserRelationshipFirstStep</param>
+        /// <returns></returns>
+        public string ProcessRelationshipFirstStep(string value, out bool isValid, out string faceExpr)
+        {
+            isValid = true;
+            faceExpr = "";
+            bool IsWoman = IsAnsweredAndUserIsWoman();
+            bool IsMan = IsAnsweredAndUserIsMan();
+
+            if (IsNo(value) && IsWoman)
+                return "Right, it is their job afterall.";
+
+            if (IsYes(value) && IsWoman)
+                return "Men are dummies, so sometimes we need to take matters in our hands.";
+
+            if (IsYes(value) && IsMan)
+                return "Yes, but women are used the other way around.";
+
+            if (IsMan == false && IsWoman == false)
+                return "Usually that is a man's job.";
+
+            return "";
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value">is the answer to question: UserValentinesDay</param>
+        /// <returns></returns>
+        public string ProcessValentinesDay(string value, out bool isValid, out string faceExpr)
+        {
+            isValid = true;
+            faceExpr = "";
+
+            bool IsWoman = IsAnsweredAndUserIsWoman();
+            bool IsMan = IsAnsweredAndUserIsMan();
+
+            if (IsNo(value) && IsWoman)
+                return "Right, it is our day.";
+
+            if (IsYes(value) && IsWoman)
+                return "Yeah, men also like gifts.";
+
+            if (IsYes(value) && IsMan)
+                return "I agree. We are talking about equality here.";
+
+            if (IsMan == false && IsWoman == false)
+                return "As a sign of love, both should get a present.";
+
+            return "";
+        }
     }
 }

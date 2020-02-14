@@ -15,6 +15,12 @@ namespace Companion.KorraAI
 
         public static void AddPureFact(PureFact fact)
         {
+            //check if ID already exists
+            bool existsAlready = list.Any(cus => cus.Name == fact.Name);
+
+            if (existsAlready)
+                SharedHelper.Log("Pure Fact with this Name already exists: '" + fact.Name + "'. Second one was ignored.");
+            else
             list.Add(fact);
         }
 
@@ -147,6 +153,60 @@ namespace Companion.KorraAI
                 }
             }
         }
+
+        public static PureFact GetPureFactAbouUser()
+        {
+            var q = (from pf in PureFacts.GetList()
+                     where pf.Type == PureFactType.AboutUser && pf.IsPlanned == false && pf.IsUsed == false
+                     select pf).ToArray();
+
+            if (q.Length > 0)
+            {
+                string[] group1 = { "UserName" }; //conversation should start with these
+                string[] group2 = { "UserAge", "UserSex" }; //conversation should continue with these
+                string[] group3 = { "UserLocation", "UserNationality", "UserIsMarried", "UserHasKids", "UserHasJob" }; //and then with these
+
+                List<ItemProb<string>> itemProbs = new List<ItemProb<string>>();
+
+                //assign probabilities 
+                foreach (PureFact fact in q)
+                {
+                    if (group1.Contains(fact.Name)) //GROUP 1 
+                    {
+                        itemProbs.Add(new ItemProb<string>(fact.Name, Prob(0.99)));
+                        break; //add only 1 item
+                    }
+                    else
+                    if (group2.Contains(fact.Name)) //GROUP 2
+                        itemProbs.Add(new ItemProb<string>(fact.Name, Prob(0.8)));
+                    else
+
+                    if (group3.Contains(fact.Name)) //GROUP 3
+                        itemProbs.Add(new ItemProb<string>(fact.Name, Prob(0.20)));
+
+                    else itemProbs.Add(new ItemProb<string>(fact.Name, Prob(0.06))); //all the other pure facts not in group1 and group 2
+                }
+
+                var pureFactDistF = CategoricalF(itemProbs.ToArray()).Normalize();
+
+                //SharedHelper.Log("Pure fact questions to ask the user histogram:\r\n" + pureFactDistF.Histogram());
+
+                var pureFactDist = pureFactDistF.ToSampleDist();
+
+                var selectionName = pureFactDist.Sample();
+
+                PureFact selectedPureFact = PureFacts.GetFacfByName(selectionName);
+
+                //SharedHelper.Log("GetPureFactAbouUser: selectionName " + selectionName);
+
+                return selectedPureFact;
+            }
+            else
+            {
+                SharedHelper.LogError("GetPureFactAbouUser could not supply a pure fact about the user.");
+                return null;
+            }
+        }
     }
 
     public static class UncertainFacts
@@ -271,7 +331,7 @@ namespace Companion.KorraAI
                 }
             }
 
-            SharedHelper.LogError("Uncertain Fact Name not found in SetAsUsed!");
+            SharedHelper.LogError("Uncertain Fact Name '"+ Name + "' not found in SetAsUsed!");
         }
     }
 }
