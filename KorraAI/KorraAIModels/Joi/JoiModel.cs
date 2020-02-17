@@ -202,7 +202,7 @@ namespace Companion.KorraAI.Models.Joi
                     {
                         if (interactions.Peek().Name != newInteraction.Value.Name)
                         {
-                            HumanEmulator.InsertFirstInteractionList(newInteraction.Value);
+                            KorraModelHelper.InsertFirstInteractionList(ref interactions, newInteraction.Value);
 
                             //TODO: this custom code should be moved to another place
                             if (trigger is VideoGameSurpriseTrigger)

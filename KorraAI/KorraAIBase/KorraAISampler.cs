@@ -161,7 +161,7 @@ namespace Companion.KorraAI
                 SportsProvider.RemovePlannedFlagForAllSports(); //so that we can re-schedule them
                 MoviesProvider.RemovePlannedFlagForAllMovies(); //so that we can re-schedule them
                 PureFacts.RemovePlannedFlagForAllPureFacts(); //so that we can re-schedule them
-                BuysProvider.RemovePlannedFlagForAllBuys(); //so that we can re-schedule them
+                ConvinceBuysProvider.RemovePlannedFlagForAllBuys(); //so that we can re-schedule them
 
                 Interactions.Clear();
                 SharedHelper.Log("Old buffered interactions cleared.");

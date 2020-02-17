@@ -20,7 +20,7 @@ namespace Companion
 
         public static string MakeGeneralStatement { get { return "MakeGeneralStatement"; } } //currently not sampled, only manually used
 
-        public static string MakeBuyStatement { get { return "MakeBuyStatement"; } } //currently not sampled, only manually used
+        public static string ConvinceBuyStatement { get { return "MakeBuyStatement"; } } //currently not sampled, only manually used
 
         public static string ExpressMentalState { get { return "ExpressingMentalState"; } }
     }
@@ -66,6 +66,8 @@ namespace Companion
         public static string FlirtingAfterTalking { get { return "Flirting"; } }
 
         public static string BlinkRightEyeAfterTalking { get { return "BlinkRightEye"; } }
+
+        public static string BlinkRightEyeAndSmile { get { return "BlinkRightEyeAndSmile"; } }
 
         //public static string Disbelief { get { return "Disbelief"; } } //TODO: NOT IMPLEMENTED
 

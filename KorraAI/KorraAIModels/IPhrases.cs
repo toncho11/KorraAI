@@ -12,6 +12,8 @@ namespace Companion.KorraAI.Models
 
         string SayGoodBye();
 
+        string GreetAfterIntroduction(string value, out bool isValid, out string faceExpr);
+
         string BotName();
 
         string IamAWoman();

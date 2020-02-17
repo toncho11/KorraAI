@@ -15,7 +15,7 @@ namespace Companion
         /// <summary>
         /// Does the bot memorizes used items (certain)
         /// </summary>
-        public static bool EnablePersistentData = false;
+        public static bool EnablePersistentData = true;
 
         public static int DefaultOutfitIndex = 1; //starts from 1
 

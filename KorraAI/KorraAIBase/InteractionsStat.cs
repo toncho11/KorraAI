@@ -106,7 +106,7 @@ namespace Companion.KorraAI
                 averageTimeOfInteractionPerCategory.Add(itemNew);
             }
 
-            SharedHelper.Log("Interaction of type '" + category + "' time: " + time);
+            SharedHelper.Log("The elapsed time of an interaction of type '" + category + "' is: " + time);
         }
 
         private static float AveragePauseTime()

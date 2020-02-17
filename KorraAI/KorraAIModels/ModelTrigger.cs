@@ -13,6 +13,7 @@ namespace Companion.KorraAI.Models
     /// </summary>
     public interface IModelTrigger
     {
+        string Name { get; }
         bool IsTimeBased { get; }
         bool IsUserResponseBased { get; }
         bool IsOneTimeTrigger { get; }
@@ -21,6 +22,12 @@ namespace Companion.KorraAI.Models
         /// How many times the trigger has been activated
         /// </summary>
         int  TriggeredCount { get; }
+
+        /// <summary>
+        /// Currently only used when loading persistent data
+        /// </summary>
+        /// <param name="count"></param>
+        void SetExecutedCount(int count);
     }
 
     public struct ModelUpdateTriggerReturn

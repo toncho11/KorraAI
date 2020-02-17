@@ -177,29 +177,29 @@ namespace Companion.KorraAI
 
         string statementOnNegativeResponse;
 
-        public string GetResponse(out string facialExpression, out bool IsResponseValid)
+        public string GetReaction(bool IsPositiveResponse, bool IsNegativeResponse, out string FacialExpression, out bool IsResponseValid)
         {
             // it either returns a predefined response or
             // if available it executes the ResponseFunc to obtain one
 
             string result = "";
-            facialExpression = "";
+            FacialExpression = "";
 
             if (!string.IsNullOrEmpty(Acknowledgement))
             {
                 result = Acknowledgement;
             }
 
-            if (!string.IsNullOrEmpty(statementOnPositiveResponse) && HumanEmulator.CurrentAIModel.GetContext().Phrases.IsYes(Value))
+            if (IsPositiveResponse && !string.IsNullOrEmpty(statementOnPositiveResponse))
             {
                 result = statementOnPositiveResponse;
-                facialExpression = FacialExpressionOnPositiveResponse;
+                FacialExpression = FacialExpressionOnPositiveResponse;
             }
 
-            if (!string.IsNullOrEmpty(statementOnNegativeResponse) && HumanEmulator.CurrentAIModel.GetContext().Phrases.IsNo(Value))
+            if (IsNegativeResponse && !string.IsNullOrEmpty(statementOnNegativeResponse))
             {
                 result = statementOnNegativeResponse;
-                facialExpression = FacialExpressionOnNegativeResponse;
+                FacialExpression = FacialExpressionOnNegativeResponse;
             }
 
             IsResponseValid = true;
@@ -208,7 +208,7 @@ namespace Companion.KorraAI
             if (!IsAnswered && ResponseFunc != null) SharedHelper.LogError("Trying to use processing function on unanswered question.");
 
             if (ResponseFunc != null)
-                result = ResponseFunc(Value, out IsResponseValid, out facialExpression);
+                result = ResponseFunc(Value, out IsResponseValid, out FacialExpression);
 
             return result;
         }

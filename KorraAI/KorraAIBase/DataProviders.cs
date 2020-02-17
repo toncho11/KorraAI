@@ -328,7 +328,7 @@ namespace Companion.KorraAI
 
     }
 
-    public static class BuysProvider
+    public static class ConvinceBuysProvider
     {
         private static List<Buy> allbuys = new List<Buy>();
         private static readonly System.Random r = new System.Random();
@@ -338,7 +338,7 @@ namespace Companion.KorraAI
             allbuys.Add(buy);
         }
 
-        public static Buy GetBuy()
+        public static Buy GetConvinceBuy()
         {
             Buy[] q;
 

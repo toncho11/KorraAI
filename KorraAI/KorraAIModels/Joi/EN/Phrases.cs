@@ -330,7 +330,11 @@ namespace Companion.KorraAI.Models.Joi
             faceExpr = "";
 
             if (IsNo(value))
+            {
+                faceExpr = FaceExp.FlirtingAfterTalking;
+                //faceExpr = FaceExp.BlinkRightEyeAndSmile;
                 return "<prosody pitch=\"+0%\">Good. <break time=\"700ms\"/> We will fix that.</prosody>";
+            }
             else return "";
         }
 
@@ -453,6 +457,28 @@ namespace Companion.KorraAI.Models.Joi
                 return "As a sign of love, both should get a present.";
 
             return "";
+        }
+
+        public string GreetAfterIntroduction(string value, out bool isValid, out string faceExpr)
+        {
+            isValid = !string.IsNullOrEmpty(value);
+            faceExpr = "";
+
+            string text = "Nice to meet you";
+
+            if (isValid)
+            {
+                string Username = value;
+
+                if (!string.IsNullOrEmpty(Username)) text += " " + Username;
+                text += ".";
+            }
+            else
+            {
+                text = "Hmmm I think I did not get your name correctly.";
+            }
+
+            return text;
         }
     }
 }

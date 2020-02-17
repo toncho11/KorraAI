@@ -17,6 +17,14 @@ namespace Companion.KorraAI.Models.Joi
         private int executedCount = 0;
         readonly int MinutesIncreaseMusic;
 
+        public string Name
+        {
+            get
+            {
+                return "MusicModelUpdateTrigger";
+            }
+        }
+
         public MusicModelUpdateTrigger(int minutesIncreaseMusic)
         {
             MinutesIncreaseMusic = minutesIncreaseMusic;
@@ -69,6 +77,11 @@ namespace Companion.KorraAI.Models.Joi
 
             return false; //no re-sampling
         }
+
+        public void SetExecutedCount(int count)
+        {
+            executedCount = count;
+        }
     }
 
     /// <summary>
@@ -80,6 +93,14 @@ namespace Companion.KorraAI.Models.Joi
 
         bool wasEveningBefore = StatesShared.IsEvening;
         bool wasWeekendBefore = StatesShared.IsWeekend;
+
+        public string Name
+        {
+            get
+            {
+                return "MoviesModelUpdateTrigger";
+            }
+        }
 
         public bool IsTimeBased
         {
@@ -201,6 +222,11 @@ namespace Companion.KorraAI.Models.Joi
             else
                 return false; //no re-sampling
         }
+
+        public void SetExecutedCount(int count)
+        {
+            executedCount = count;
+        }
     }
 
     /// <summary>
@@ -209,6 +235,14 @@ namespace Companion.KorraAI.Models.Joi
     public class VideoGameSurpriseTrigger : IModelEvaluateTrigger
     {
         private int executedCount = 0;
+
+        public string Name
+        {
+            get
+            {
+                return "VideoGameSurpriseTrigger";
+            }
+        }
 
         bool IModelTrigger.IsTimeBased
         {
@@ -377,6 +411,11 @@ namespace Companion.KorraAI.Models.Joi
             }
 
             return null;
+        }
+
+        public void SetExecutedCount(int count)
+        {
+            executedCount = count;
         }
     }
 }

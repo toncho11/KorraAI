@@ -25,5 +25,7 @@ namespace Companion
         public static bool RequestFlirtingExpression; //shows after talking is done
 
         public static bool RequestRightEyeBlink; //shows after talking is done
+
+        public static bool RequestRightEyeBlinkAndSmile;
     }
 }

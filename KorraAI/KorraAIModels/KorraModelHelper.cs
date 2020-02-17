@@ -223,8 +223,24 @@ namespace Companion.KorraAI.Models
                 if (exp == FaceExp.BlinkRightEyeAfterTalking) FlagsShared.RequestRightEyeBlink = true;
                 else
                 if (exp == FaceExp.FlirtingAfterTalking) FlagsShared.RequestFlirtingExpression = true;
+                else
+                if (exp == FaceExp.BlinkRightEyeAndSmile) FlagsShared.RequestRightEyeBlinkAndSmile = true;
             }
             else SharedHelper.LogError("Unknown face expression requested: '" + exp + "'");
+        }
+
+        /// <summary>
+        /// Add as first element, it will be the first interaction to be used next
+        /// </summary>
+        /// <param name="item"></param>
+        public static void InsertFirstInteractionList(ref Queue<CommItem> interactions, CommItem item)
+        {
+            var list = interactions.ToList();
+            list.Insert(0, item);
+            interactions = new Queue<CommItem>(list);
+
+            //if it is a reaction, then it should be in the item
+            //CurrentTimePause = CurrentAIModel.GetCognitiveDist().GetNextInteactionPause(true);
         }
     }
 }
