@@ -40,3 +40,16 @@ And also:
 
 
 [Installation](../../wiki/Installation)
+
+**License**:
+
+The code in this repository is GPL-ed. You can ask for commercial licesense.
+KorraAI uses components that need a licesense to be used. If it is not for simple try and experiment you must purchase the following components:
+
+https://assetstore.unity.com/packages/tools/animation/salsa-lipsync-suite-148442
+
+https://assetstore.unity.com/packages/tools/audio/rt-voice-pro-41068
+
+https://assetstore.unity.com/packages/tools/video/youtube-video-player-youtube-api-29704
+
+
