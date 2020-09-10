@@ -32,11 +32,12 @@ And also:
 **Application:**
 
 - A character in a video game
+- Teaching agent
 - Sales agent
-- TV presenter
 - Entertainer
 - Companion
 - Psychological experiments
+- Coaching
 
 
 [Installation](../../wiki/Installation)
@@ -44,7 +45,7 @@ And also:
 **License**:
 
 The code in this repository is GPL-ed. You can ask for commercial licesense.
-KorraAI uses components that need a licesense to be used. If it is not for simple try and experiment you must purchase the following components:
+KorraAI uses several commercial components that need a licesense. If it is not for simple try and experiment you must purchase the following components:
 
 https://assetstore.unity.com/packages/tools/animation/salsa-lipsync-suite-148442
 
