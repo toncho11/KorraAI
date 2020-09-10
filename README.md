@@ -17,7 +17,7 @@ Advantages of using KorraAI:
 
 In order to start coding for KorraAI you need to go through the following pages:
 
-*  [Coding and compiling your bot]../../wiki/Coding-your-own-bot
+*  [Coding and compiling your bot](../../wiki/Coding-your-own-bot)
 *  [Architecture](../../wiki/Architecture)
 *  [Tutorial](../../wiki/Tutorial)
 *  [KorraAIModel class](../../wiki/KorraAIModel-class)
