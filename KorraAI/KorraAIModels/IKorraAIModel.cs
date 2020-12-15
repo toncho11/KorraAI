@@ -12,17 +12,17 @@ namespace Companion.KorraAI.Models
 
         string Version { get; }
 
-        void Init();
+        void Init(DateTime? LastSessionDateTime);
 
         event EventHandler ContextLoaded;
 
         //event EventHandler Surprise; //if triggered the bot will express suprise
 
-        KorraAISampler GetSampler();
+        IKorraAISampler GetSampler();
 
         ModelContext GetContext();
 
-        IDistributions GetCognitiveDist();
+        IBaseDistributions GetCognitiveDist();
 
         /// <summary>
         /// Allows to change behavior based on: the time that has passed or if a pure or uncertain fact has been updated (by for example user's response)
@@ -58,13 +58,6 @@ namespace Companion.KorraAI.Models
         /// <returns></returns>
         bool AdjustProbVariablesDuringPlanning(int bufferedInteractionsCount);
 
-        /// <summary>
-        /// A wrapper for the Data Providers which can use a distribution over the items in the database
-        /// </summary>
-        /// <param name="category"></param>
-        /// <returns></returns>
-        Item GetItem(string category);
-
         IModelTrigger[] GetModelTriggers { get; }
 
         bool SmileOnNoReactionToUserResponse
@@ -73,5 +66,12 @@ namespace Companion.KorraAI.Models
         }
 
         void SetFacialExpression(CommItem item);
+
+        void FilterStoredFacts(ref List<Item> items);
+
+        ItemManager[] ItemProviders
+        {
+            get;
+        }
     }
 }

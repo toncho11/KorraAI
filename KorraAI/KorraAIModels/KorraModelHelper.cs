@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Globalization;
 
 using ProbCSharp;
+using UnityEngine;
 
 namespace Companion.KorraAI.Models
 {
@@ -128,20 +129,38 @@ namespace Companion.KorraAI.Models
             else return false;
         }
 
-        public static int GetItemsLeftForCategory(string category)
+        public static int GetItemsLeftForSubCategory(string subCategory,ItemManager[] managers)
         {
-            if (category == ActionsEnum.AskPureFactQuestionAboutUser)
+            if (subCategory == ActionsEnum.AskPureFactQuestionAboutUser)
             {
-                var q = (from pf in PureFacts.GetList()
+                PureFacts pfManager = (PureFacts)managers.SingleOrDefault(x => x is PureFacts);
+
+                if (pfManager == null)
+                {
+                    SharedHelper.LogError("No manager in GetPureFactAbouBot.");
+                    return 0;
+                }
+
+                var q = (from item in pfManager.GetAll()
+                         let pf = (PureFact)item
                          where pf.Type == PureFactType.AboutUser && pf.IsPlanned == false && pf.IsUsed == false
                          select pf).ToArray();
 
                 return q.Length;
             }
             else
-            if (category == ActionsEnum.SharePureFactInfoAboutBot)
+            if (subCategory == ActionsEnum.SharePureFactInfoAboutBot)
             {
-                var q = (from pf in PureFacts.GetList()
+                PureFacts pfManager = (PureFacts)managers.SingleOrDefault(x => x is PureFacts);
+
+                if (pfManager == null)
+                {
+                    SharedHelper.LogError("No manager in GetPureFactAbouBot.");
+                    return 0;
+                }
+
+                var q = (from item in pfManager.GetAll()
+                         let pf = (PureFact)item
                          where pf.Type == PureFactType.AboutBot && pf.IsPlanned == false && pf.IsUsed == false
                          select pf).ToArray();
 
@@ -149,7 +168,7 @@ namespace Companion.KorraAI.Models
             }
             else
             {
-                SharedHelper.LogError("GetItemsLeftForCategory: action category currently not supported");
+                SharedHelper.LogError("GetItemsLeftForSubCategory: action category currently not supported");
                 return 0;
             }
         }
@@ -192,21 +211,21 @@ namespace Companion.KorraAI.Models
             }
         }
 
-        public static void RemoveInteraction(ref List<CommItem> list, int position)
+        public static void RemoveInteraction(ref List<CommItem> list, int position, ItemManager[] managers)
         {
             if (position < list.Count)
             {
                 CommItem tobeRemoved = list[position];
 
-                if (tobeRemoved.Action == ActionsEnum.MakeSuggestion && tobeRemoved.Suggestion == SuggestionsEnum.ListenToSong)
-                {
-                    string songName = list[position].Name;
-                    list.RemoveAt(position);
+                ItemManager manager = managers.SingleOrDefault(x => x.Is(tobeRemoved));
 
-                    SongsProvider.SetSongAsPlanned(songName, false);
+                if (manager!=null)
+                {
+                    list.RemoveAt(position);
+                    manager.SetAsPlanned(tobeRemoved.Name, false);
                     SharedHelper.Log("Interaction removed: " + tobeRemoved.Name);
                 }
-                else SharedHelper.LogError("Removing this type of interaction from the list of planned interactions is currently NOT supported.");
+                else SharedHelper.LogError("Could not remove interaction from list:" + tobeRemoved.Name + " " +tobeRemoved.Category + " " + tobeRemoved.SubCategory);   
             }
             else SharedHelper.LogError("Could not remove interaction at position: " + position);
 
@@ -235,12 +254,42 @@ namespace Companion.KorraAI.Models
         /// <param name="item"></param>
         public static void InsertFirstInteractionList(ref Queue<CommItem> interactions, CommItem item)
         {
-            var list = interactions.ToList();
-            list.Insert(0, item);
-            interactions = new Queue<CommItem>(list);
+            //if (afterReaction)
+            //{
+            //    var list = interactions.ToList();
+
+            //    int i = 0; //locate the first non "ReactionToUser" item
+            //    for (i = 0; i < interactions.Count; i++)
+            //        if (!list[i].IsReactionToUser)
+            //            break;
+
+
+            //    list.Insert(i, item);
+            //    interactions = new Queue<CommItem>(list);
+            //}
+            //else
+            {
+                var list = interactions.ToList();
+                list.Insert(0, item);
+                interactions = new Queue<CommItem>(list);
+            }
 
             //if it is a reaction, then it should be in the item
             //CurrentTimePause = CurrentAIModel.GetCognitiveDist().GetNextInteactionPause(true);
+        }
+
+        public static bool UseAgainAlreadyUsedInteractions(DateTime? lastSessionDateTime, int thresholdDays)
+        {
+            if (lastSessionDateTime.HasValue)
+            {
+                int daysApartSessions = Convert.ToInt32((DateTime.Now - lastSessionDateTime.Value).TotalDays);
+
+                return daysApartSessions > thresholdDays;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }

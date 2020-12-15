@@ -15,7 +15,7 @@ namespace Companion.KorraAI
         /// <summary>
         /// CategoryName and CategoryName_missing, number of interactions for this category
         /// </summary>
-        static Dictionary<string, int> scheduledInteractions = new Dictionary<string, int>();
+        static Dictionary<string, int> CategoryNInter = new Dictionary<string, int>();
 
         /// <summary>
         /// Category, Average time, Count
@@ -33,7 +33,7 @@ namespace Companion.KorraAI
 
             float time = 0;
 
-            foreach (var category in scheduledInteractions)
+            foreach (var category in CategoryNInter)
             {
                 if (averageTimeOfInteractionPerCategory.Exists(x => x.Item1 == category.Key))
                 {
@@ -54,11 +54,16 @@ namespace Companion.KorraAI
             return time;
         }
 
+        public static bool IsAvailable()
+        {
+            return averageTimeOfInteractionPerCategory.Count > 0;
+        }
+
         public static int TotalMissingInteractions()
         {
             int count = 0;
 
-            foreach (var category in scheduledInteractions)
+            foreach (var category in CategoryNInter)
             {
                 if (category.Key.EndsWith("_missing"))
                     count++;
@@ -72,21 +77,21 @@ namespace Companion.KorraAI
         /// </summary>
         public static void Reset()
         {
-            scheduledInteractions = new Dictionary<string, int>();
+            CategoryNInter = new Dictionary<string, int>();
         }
 
         public static void AddScheduledInteraction(string category)
         {
-            if (scheduledInteractions.ContainsKey(category))
-                scheduledInteractions[category]++;
-            else scheduledInteractions[category] = 0;
+            if (CategoryNInter.ContainsKey(category))
+                CategoryNInter[category]++;
+            else CategoryNInter[category] = 0;
         }
 
         public static void AddMissingInteraction(string category)
         {
-            if (scheduledInteractions.ContainsKey(category + "_missing"))
-                scheduledInteractions[category + "_missing"]++;
-            else scheduledInteractions[category + "_missing"] = 0;
+            if (CategoryNInter.ContainsKey(category + "_missing"))
+                CategoryNInter[category + "_missing"]++;
+            else CategoryNInter[category + "_missing"] = 0;
         }
 
         public static void AddInteractionTimeElapsed(string category, float time)
@@ -111,7 +116,7 @@ namespace Companion.KorraAI
 
         private static float AveragePauseTime()
         {
-            //TODO: take automatically the mean and variance
+            //TODO: take automatically the mean and variance of the pause distribution
             float mean = 3.7f; //Pause time = Normal(mean, variance) = (3.7, 0.25)
             return mean;
         }
@@ -120,10 +125,10 @@ namespace Companion.KorraAI
         {
             string result = "";
             int i = 0;
-            foreach (var key in scheduledInteractions.Keys)
+            foreach (var key in CategoryNInter.Keys)
             {
                 i++;
-                result += "|" + key + ": " + scheduledInteractions[key] + Environment.NewLine;
+                result += "|" + key + ": " + CategoryNInter[key] + Environment.NewLine;
             }
             SharedHelper.LogWarning("Interactions statistics: " + Environment.NewLine + result);
 

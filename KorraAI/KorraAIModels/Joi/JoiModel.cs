@@ -12,17 +12,14 @@ namespace Companion.KorraAI.Models.Joi
 {
     public class JoiModel : IKorraAIModel
     {
-        bool RomanticJokesFirst = false;
-        bool RomanticJokesLast = true;
-
         /// <summary>
         /// After how many minutes to increase the music suggestions
         /// </summary>
         readonly int MinutesIncreaseMusic = 15; //default 15;
 
-        KorraAISampler korraSampler;
+        IKorraAISampler korraSampler;
 
-        IDistributions cognitiveDist;
+        IBaseDistributions cognitiveDist;
 
         public event EventHandler ContextLoaded;
 
@@ -31,6 +28,8 @@ namespace Companion.KorraAI.Models.Joi
         ModelContext context;
 
         IModelTrigger[] ModelTriggers;
+
+        ItemManager[] itemProviders;
 
         public string Name
         {
@@ -48,41 +47,56 @@ namespace Companion.KorraAI.Models.Joi
             }
         }
 
-        public void Init()
+        public void Init(DateTime? LastSessionDateTime)
         {
+
             #region Configure character
 
             Personality.UseMildOffensiveJokes = true;
-            Personality.UseMildSexualThemes = true;
-            Personality.UseRomanticReferences = true;
+            Personality.UseMildSexualThemes = false;
+            Personality.UseRomanticReferences = false;
 
             #endregion
 
             context = new ModelContext();
 
+            //Select data providers
+            itemProviders = new ItemManager[] { new SportsProvider(new Sport("")),
+                                                new PureFacts(new PureFact()),
+                                                new MoviesProvider(new Movie("",false,false)),
+                                                new SongsProvider(new Song("",""))
+                                              };
+
             if (BotConfigShared.Language == Lang.EN)
             {
-                context.Phrases = new PhrasesEN();
+                context.BasePhrases = new PhrasesEN(itemProviders);
 
-                context.Items = new ItemsEN();
+                context.Items = new ItemsEN((PhrasesEN)context.BasePhrases);
 
-                context.SpeechAdaptation = new SpeechAdaptationEN();
+                context.SpeechAdaptation = new SpeechAdaptationEN((IJoiPhrases)context.BasePhrases);
             }
-            //else
-            //if (BotConfigShared.Language == Lang.FR)
-            //{
-            //    context.Phrases = new PhrasesFR();
+            else
+            if (BotConfigShared.Language == Lang.FR)
+            {
+                //context.BasePhrases = new PhrasesFR(itemProviders);
 
-            //    context.Items = new ItemsFR();
+                //context.Items = new ItemsFR();
 
-            //    context.SpeechAdaptation = new SpeechAdaptationFR();
-            //}
+                //context.SpeechAdaptation = new SpeechAdaptationFR((IJoiPhrases)context.BasePhrases);
+            }
             else
             {
                 SharedHelper.LogError("Language pack not found.");
             }
 
-            context.Items.LoadAll(context.Phrases);
+            context.Items.LoadAll(itemProviders);
+
+            foreach (var provider in itemProviders)
+            {
+                if (provider.Count() == 0) SharedHelper.LogError("Detected an item manager without items.");
+            }
+
+            //ReuseInteractions(PersistentData.GetLastSession()); //some already used interactions are re-enabled
 
             cognitiveDist = new JoiDistributions();
 
@@ -90,18 +104,17 @@ namespace Companion.KorraAI.Models.Joi
             {
                 new MusicModelUpdateTrigger(MinutesIncreaseMusic),
                 new MoviesModelUpdateTrigger(),
-                new VideoGameSurpriseTrigger(),
+                new VideoGameSurpriseTrigger((IJoiPhrases)context.BasePhrases),
             };
 
-            RomanticJokesFirst = true;
-            RomanticJokesLast = false;
-
-            korraSampler = new KorraAISampler();
-            korraSampler.Init(context, AdjustProbVariablesDuringPlanning, GetItem);
+            korraSampler = new JoiSampler();
+            korraSampler.Init(context, AdjustProbVariablesDuringPlanning, itemProviders);
 
             //Delayed. These Uncertain Facts questions are automatically re-enabled after a certain period of time
             UncertainFacts.SetAsUsed("UserIsTired");
             UncertainFacts.SetAsUsed("UserGoodMood");
+            UncertainFacts.SetAsUsed("BotAsksIfJokeRateIsOK"); 
+            UncertainFacts.SetAsUsed("BotChangeOutfit");                                              
 
             //cache values
             cognitiveDist.NextSmilePauseTime();
@@ -113,17 +126,7 @@ namespace Companion.KorraAI.Models.Joi
             ContextLoaded(this, EventArgs.Empty);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public KorraAISampler GetModel()
-        {
-            if (!isInitialized) SharedHelper.LogError("Not initialized.");
-            return korraSampler;
-        }
-
-        public KorraAISampler GetSampler()
+        public IKorraAISampler GetSampler()
         {
             if (!isInitialized) SharedHelper.LogError("Not initialized.");
             return korraSampler;
@@ -146,12 +149,12 @@ namespace Companion.KorraAI.Models.Joi
 
         public bool ModelUpdate(TimeSpan timeSinceStart, bool isPureFactUpdated, bool isUncertainFactUpdated)
         {
-            if (!isInitialized) SharedHelper.LogError("Not initialized.");
-
             bool regenerationRequested = false;
 
+            if (!isInitialized) { SharedHelper.LogError("Not initialized."); return regenerationRequested; }
+
             //Execute triggers that perform inference and update probabilistic variables 
-            foreach (var trigger in ModelTriggers)
+                foreach (var trigger in ModelTriggers)
             {
                 int oldExecuteCount = trigger.TriggeredCount;
 
@@ -182,6 +185,8 @@ namespace Companion.KorraAI.Models.Joi
 
         public void InteractionsUpdate(TimeSpan timeSinceStart, int interactionsDoneSinceStart, ref Queue<CommItem> interactions)
         {
+            if (!isInitialized) { SharedHelper.LogError("Not initialized."); return; }
+
             //Evaluate triggers that represent 'Surprise' for example
             //These triggers evaluate a model and add a new interaction
             foreach (var trigger in ModelTriggers)
@@ -230,7 +235,7 @@ namespace Companion.KorraAI.Models.Joi
             SharedHelper.Log("Pure fact updated: " + pfact.Name);
         }
 
-        public IDistributions GetCognitiveDist()
+        public IBaseDistributions GetCognitiveDist()
         {
             if (!isInitialized) SharedHelper.LogError("Not initialized.");
             return cognitiveDist;
@@ -247,7 +252,7 @@ namespace Companion.KorraAI.Models.Joi
 
             //1. About bot
             //exclude this action because there are no items for it
-            if (ProbVariables.Bot.PrSharePureFactInfoAboutBot[(int)PV.Current].Value != 0 && KorraModelHelper.GetItemsLeftForCategory(ActionsEnum.SharePureFactInfoAboutBot) == 0)
+            if (ProbVariables.Bot.PrSharePureFactInfoAboutBot[(int)PV.Current].Value != 0 && KorraModelHelper.GetItemsLeftForSubCategory(ActionsEnum.SharePureFactInfoAboutBot, ItemProviders) == 0)
             {
                 //adjust pure facts probabilities: disable AboutBot and boost AboutUser 
 
@@ -263,7 +268,7 @@ namespace Companion.KorraAI.Models.Joi
 
             //2. About User
             //exclude this action because there are no items for it
-            if (ProbVariables.Bot.PrAskPureFactQuestionAboutUser[(int)PV.Current].Value != 0 && KorraModelHelper.GetItemsLeftForCategory(ActionsEnum.AskPureFactQuestionAboutUser) == 0)
+            if (ProbVariables.Bot.PrAskPureFactQuestionAboutUser[(int)PV.Current].Value != 0 && KorraModelHelper.GetItemsLeftForSubCategory(ActionsEnum.AskPureFactQuestionAboutUser, ItemProviders) == 0)
             {
                 //adjust pure facts probabilities: disable AboutUser and boost AboutBot
 
@@ -297,44 +302,6 @@ namespace Companion.KorraAI.Models.Joi
             return regenerate;
         }
 
-        private Joke GetJoke()
-        {
-            Joke selectedJoke;
-
-            PureFact fact = PureFacts.GetFacfByName("EasilyOffended");
-
-            if (fact == null) return null;
-
-            var dist = cognitiveDist.JokesDistribution(fact, this.RomanticJokesFirst, this.RomanticJokesLast);
-
-            if (dist == null) return null;
-
-            var selectionName = dist.Sample();
-
-            selectedJoke = JokesProvider.GetJokeByName(selectionName);
-
-            //SharedHelper.Log("GetPureFactAbouUser: selectionName " + selectionName);
-
-            return selectedJoke;
-        }
-
-        /// <summary>
-        /// This method is provided to the sampler
-        /// </summary>
-        /// <param name="category"></param>
-        /// <returns></returns>
-        public Item GetItem(string category)
-        {
-            if (category == SuggestionsEnum.TellJoke)
-            {
-                var joke = GetJoke();
-
-                return joke;
-            }
-
-            return null;
-        }
-
         public bool SmileOnNoReactionToUserResponse
         {
             get
@@ -349,45 +316,122 @@ namespace Companion.KorraAI.Models.Joi
         /// <param name="item"></param>
         public void SetFacialExpression(CommItem item)
         {
-            if (item.IsReactionToUser)
+            #region Get Fact Manager
+            PureFacts pfManager = (PureFacts)ItemProviders.SingleOrDefault(x => x is PureFacts);
+            if (pfManager == null)
             {
-                //If it is a reaction, we check if a facial expression was already supplied
-                if (!string.IsNullOrEmpty(item.FacialExpression))
-                    KorraModelHelper.SetFacialExpressionFlag(item.FacialExpression);
-                else
-                    //Default to smile if not set in the reaction itself
-                    FlagsShared.RequestSmileAfterTalkingDone = true;
+                SharedHelper.LogError("No manager in Facts Manager in SetFacialExpression for model " + this.Name);
+                return;
             }
-            else
-            if (item.IsPureFact)
-            {
-                PureFact fact = PureFacts.GetFacfByName(item.Name);
+            #endregion
 
-                if (fact != null && fact.Type == PureFactType.AboutBot) KorraModelHelper.SetFacialExpressionFlag(FaceExp.SmileAfterTalking);
+            //PureFacts and Jokes will facial expression set at this stage or by Dynamic Function
+            //it updates the facial expression, if it is empty
+
+            if (!string.IsNullOrEmpty(item.FacialExpression))
+            {
+                KorraModelHelper.SetFacialExpressionFlag(item.FacialExpression);
             }
-            else
-            if (item.Action == ActionsEnum.ChangeVisualAppearance)
-                KorraModelHelper.SetFacialExpressionFlag(FaceExp.SmileAfterTalking);
-            else
-            if (item.Action == ActionsEnum.ExpressMentalState)
-                KorraModelHelper.SetFacialExpressionFlag(FaceExp.SmileAfterTalking);
-            else
-            if (item.Suggestion == SuggestionsEnum.TellJoke)
+            else //here in most cases we default to smile
             {
-                Joke joke = JokesProvider.GetJokeByName(item.Name);
-
-                if (joke != null && !string.IsNullOrEmpty(item.FacialExpression))
+                if (item.IsReactionToUser) //default to smile on reaction
                 {
-                    KorraModelHelper.SetFacialExpressionFlag(joke.FaceExpression);
+                    KorraModelHelper.SetFacialExpressionFlag(FaceExp.SmileAfterTalking);
                 }
+                else
+                //Handle PureFacts AboutBot
+                if (item.IsPureFact && !item.IsJokePureFact)
+                {
+                    PureFact fact = (PureFact)pfManager.GetByName(item.Name);
+
+                    if (fact != null && fact.Type == PureFactType.AboutBot) KorraModelHelper.SetFacialExpressionFlag(FaceExp.SmileAfterTalking);
+                }
+                else
+                if (item.Category == ActionsEnum.ChangeVisualAppearance)
+                    KorraModelHelper.SetFacialExpressionFlag(FaceExp.SmileAfterTalking);
+                else
+                if (item.Category == ActionsEnum.ConvinceBuyStatement)
+                    KorraModelHelper.SetFacialExpressionFlag(FaceExp.SmileAfterTalking);
+                else
+                if (item.Category == ActionsEnum.ExpressMentalState)
+                    KorraModelHelper.SetFacialExpressionFlag(FaceExp.SmileAfterTalking);
+                else
+                //Hnadle Jokes (Normal or PureFacts)
+                if (item.SubCategory == SuggestionsEnum.TellJoke && !item.IsJokePureFact)
+                {
+                    if (!item.IsJokePureFact) //Normal joke
+                    {
+                        Joke joke = JokesProvider.GetJokeByName(item.Name);
+
+                        if (joke != null && !string.IsNullOrEmpty(joke.FaceExpression)) //check for custom facial expression
+                        {
+                            KorraModelHelper.SetFacialExpressionFlag(joke.FaceExpression);
+                        }
+                        else
+                            KorraModelHelper.SetFacialExpressionFlag(FaceExp.SmileAfterTalking); //default to smile
+                    }
+                    else //PureFact joke that had no facial expression set
+                    {
+                        KorraModelHelper.SetFacialExpressionFlag(FaceExp.SmileAfterTalking); //default to smile
+                    }
+                }
+                else
+                if (item.SubCategory == SuggestionsEnum.ListenToSong ||
+                    item.SubCategory == SuggestionsEnum.DoSport
+                    || item.SubCategory == SuggestionsEnum.WatchMovie
+                    || item.SubCategory == SuggestionsEnum.GoOut)
+                    KorraModelHelper.SetFacialExpressionFlag(FaceExp.SmileAfterTalking);
             }
-            else
-            if (item.Suggestion == SuggestionsEnum.ListenToSong ||
-                item.Suggestion == SuggestionsEnum.GoToGym
-                || item.Suggestion == SuggestionsEnum.WatchMovie
-                || item.Suggestion == SuggestionsEnum.GoOut)
-                KorraModelHelper.SetFacialExpressionFlag(FaceExp.SmileAfterTalking);
 
         }
+
+        //private static void ReuseInteractions(DateTime? lastSessionDateTime)
+        //{
+        //    int threshold = 5;
+
+        //    //Pure facts about the bot are re-enabled (used=false), 
+        //    //because the user forgot about the bot, so the bot will present itself again: name, age, etc
+        //    if (KorraModelHelper.UseAgainAlreadyUsedInteractions(lastSessionDateTime, threshold))
+        //    {
+        //        if (BotConfig.TEST) UnityEngine.Debug.Log(threshold + " days apart policy applied on PureFacts");
+
+        //        UnityEngine.Debug.Log("ReuseInteractions disabled");
+        //        #region re-enable facts
+        //        //var q = from fact in PureFacts.GetAll()
+        //        //        where fact.Type == PureFactType.AboutBot
+        //        //        select fact;
+
+        //        //foreach (PureFact fact in q.ToArray())
+        //        //{
+        //        //    PureFacts.SetAsUsed(fact.Name, false);
+        //        //}
+        //        #endregion
+        //    }
+
+        //    //re-enable som jokes if the last time the bot was used is long time ago
+        //    threshold = 40;
+        //    if (KorraModelHelper.UseAgainAlreadyUsedInteractions(lastSessionDateTime, threshold))
+        //    {
+        //        if (BotConfig.TEST) UnityEngine.Debug.Log(threshold + " days apart policy applied on Jokes");
+
+        //        foreach (Joke joke in JokesProvider.GetAll())
+        //        {
+        //            joke.IsUsed = false;
+        //        }
+        //    }
+        //}
+
+        public void FilterStoredFacts(ref List<Item> items)
+        {
+        }
+
+        public ItemManager[] ItemProviders
+        {
+            get
+            {
+                return itemProviders;
+            }
+        }
+
     }
 }

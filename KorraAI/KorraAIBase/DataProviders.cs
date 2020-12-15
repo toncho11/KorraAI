@@ -9,7 +9,7 @@ using ProbCSharp;
 
 namespace Companion.KorraAI
 {
-    public static class JokesProvider
+    public static class JokesProvider 
     {
         static List<Joke> jokes = new List<Joke>();
         static System.Random r = new System.Random();
@@ -74,6 +74,23 @@ namespace Companion.KorraAI
             SharedHelper.LogError("Joke '" + Name + "' not found in SetJokeAsUsed!");
         }
 
+        public static void SetJokeAsPlanned(string Name)
+        {
+            for (int i = 0; i < jokes.Count; i++)
+            {
+                if (jokes[i].Name == Name)
+                {
+                    jokes[i].IsPlanned = true;
+
+                    //SharedHelper.Log("Joke '" + Name + "' is set to planned. Joke text: '" + jokes[i].Text + "'");
+
+                    return;
+                }
+            }
+
+            SharedHelper.LogError("Joke '" + Name + "' not found in SetJokeAsUsed!");
+        }
+
         public static string[] GetJokesIDsAlreadyUsed()
         {
             return (from joke in jokes
@@ -95,307 +112,120 @@ namespace Companion.KorraAI
 
     }
 
-    public static class SongsProvider
+    public class SongsProvider : ItemManager
     {
-        static List<Song> songs = new List<Song>();
-        static System.Random r = new System.Random();
-
-        public static void AddSong(Song song)
+        public SongsProvider(Song song) : base(song)
         {
-            songs.Add(song);
-        }
-
-        public static Song GetSong()
-        {
-            var q = songs.Where(j => j.IsUsed == false && j.IsPlanned == false).ToArray();
-
-            if (q.Length > 0)
-            {
-                Song song = q.ElementAt(r.Next(0, q.Count()));
-
-                return song;
-            }
-            else return null;
-        }
-
-        public static Song GetSongByName(string Name) //by ID
-        {
-            var q = songs.Where(j => j.Name == Name).ToArray();
-
-            if (q.Length == 0)
-            {
-                SharedHelper.LogError("Song " + Name + " not found in GetSongByName!");
-                return (songs.Count > 0) ? songs[0] : null; //return first available song
-            }
-            else if (q.Length > 1)
-            {
-                SharedHelper.LogError("Song " + Name + " has a duplicate in GetSongByName!");
-            }
-
-            return q[0]; // > 1
-        }
-
-        public static void RemovePlannedFlagForAllSongs()
-        {
-            for (int i = 0; i < songs.Count; i++)
-            {
-                songs[i].IsPlanned = false;
-            }
-        }
-
-        public static void SetSongAsUsed(string Name)
-        {
-            for (int i = 0; i < songs.Count; i++)
-            {
-                if (songs[i].Name == Name)
-                {
-                    songs[i].IsUsed = true;
-
-                    SharedHelper.Log("Song '" + Name + "' is set to used.");
-
-                    return;
-                }
-            }
-
-            SharedHelper.LogError("Song '" + Name + "' not found in SetSongAsUsed!");
-        }
-
-        public static void SetSongAsPlanned(string Name, bool value)
-        {
-            for (int i = 0; i < songs.Count; i++)
-            {
-                if (songs[i].Name == Name)
-                {
-                    songs[i].IsPlanned = value;
-
-                    if (value)
-                        SharedHelper.Log("Song '" + Name + "' is set to planned.");
-                    else SharedHelper.Log("Song '" + Name + "' is set to NOT planned.");
-
-                    return;
-                }
-            }
-
-            SharedHelper.LogError("Song '" + Name + "' not found in SetSongAsUsed!");
-        }
-
-        public static Song[] GetAll()
-        {
-            return songs.ToArray();
-        }
-
-    }
-
-    public static class SportsProvider
-    {
-        static List<Sport> sports = new List<Sport>();
-        static System.Random r = new System.Random();
-
-        static SportsProvider()
-        {
-
-        }
-
-        public static void AddSport(Sport sport)
-        {
-            sports.Add(sport);
-        }
-
-        public static Sport GetSport()
-        {
-            Sport[] q;
-
-            q = sports.Where(j => j.IsUsed == false && j.IsPlanned == false).ToArray();
-
-            if (q.Length > 0)
-            {
-                Sport s = q.ElementAt(r.Next(0, q.Count()));
-
-                return s;
-            }
-            else return null;
-        }
-
-        public static Sport GetSportByName(string Name) //by ID
-        {
-            var q = sports.Where(j => j.Name == Name).SingleOrDefault();
-
-            return q;
-        }
-
-        public static void RemovePlannedFlagForAllSports()
-        {
-            for (int i = 0; i < sports.Count; i++)
-            {
-                sports[i].IsPlanned = false;
-            }
-        }
-
-        public static void SetSportAsUsed(string Name)
-        {
-            for (int i = 0; i < sports.Count; i++)
-            {
-                if (sports[i].Name == Name)
-                {
-                    sports[i].IsUsed = true;
-
-                    SharedHelper.LogWarning("Sport " + Name + " is set to used. Sport text: '" + sports[i].Text + "'");
-
-                    return;
-                }
-            }
-
-            SharedHelper.LogError("Sport " + Name + " not found in SetMovieAsUsed!");
-        }
-
-        public static Sport[] GetAll()
-        {
-            return sports.ToArray();
         }
     }
 
-
-    public static class MoviesProvider
+    public class SportsProvider : ItemManager
     {
-        private static List<Movie> movies = new List<Movie>();
-        private static readonly System.Random r = new System.Random();
-
-        public static void AddMovie(Movie movie)
+        public SportsProvider(Item sport) : base(sport)
         {
-            movies.Add(movie);
+        }
+    }
+
+    public class MoviesProvider : ItemManager
+    {
+        public MoviesProvider(Item movie) : base(movie)
+        {
         }
 
-        public static Movie GetMovie()
+        public string[] GetMoviesIDsAlreadyUsed()
         {
-            Movie[] q;
-
-            q = movies.Where(j => j.IsUsed == false && j.IsPlanned == false).ToArray();
-
-            if (q.Length > 0)
-            {
-                Movie s = q.ElementAt(r.Next(0, q.Count()));
-
-                return s;
-            }
-            else return null;
-        }
-
-        public static Movie GetMovieByName(string Name) //by ID
-        {
-            var q = movies.Where(j => j.Name == Name).SingleOrDefault();
-
-            return q;
-        }
-
-        public static void RemovePlannedFlagForAllMovies()
-        {
-            for (int i = 0; i < movies.Count; i++)
-            {
-                movies[i].IsPlanned = false;
-            }
-        }
-
-        public static void SetMovieAsUsed(string Name)
-        {
-            for (int i = 0; i < movies.Count; i++)
-            {
-                if (movies[i].Name == Name)
-                {
-                    movies[i].IsUsed = true;
-
-                    SharedHelper.Log("Movie '" + Name + "' is set to used. Movie text: '" + movies[i].Text + "'");
-
-                    FlagsShared.RequestSavePersistentData = true;
-
-                    return;
-                }
-            }
-
-            SharedHelper.LogError("Movie '" + Name + "' not found in SetMovieAsUsed!");
-        }
-
-        public static string[] GetMoviesIDsAlreadyUsed()
-        {
-            return (from movie in movies
+            return (from movie in items
                     where movie.IsUsed == true
                     select movie.Name).ToArray();
         }
-        public static Movie[] GetAll()
+
+        public override bool IsAllowedResetUsageOnEmptyCategory()
         {
-            return movies.ToArray();
+            return true;
         }
-
-
     }
 
-    public static class ConvinceBuysProvider
+    public class ConvinceBuysManager : ItemManager
     {
-        private static List<Buy> allbuys = new List<Buy>();
-        private static readonly System.Random r = new System.Random();
-
-        public static void AddBuy(Buy buy)
+        public ConvinceBuysManager(Item buy) : base(buy)
         {
-            allbuys.Add(buy);
         }
 
-        public static Buy GetConvinceBuy()
+        public override bool IsAllowedResetUsageOnEmptyCategory()
         {
-            Buy[] q;
-
-            q = allbuys.Where(j => j.IsUsed == false && j.IsPlanned == false).ToArray();
-
-            if (q.Length > 0) //at least one found
-            {
-                Buy s = q.ElementAt(r.Next(0, q.Count()));
-
-                return s;
-            }
-            else //0 found
-            {
-                //remove all used , because there are no more buy statements to use, so we start again
-                for (int i = 0; i < allbuys.Count; i++)
-                {
-                    allbuys[i].IsUsed = false;
-                }
-
-                q = allbuys.Where(j => j.IsUsed == false && j.IsPlanned == false).ToArray();
-
-                Buy s = q.ElementAt(r.Next(0, q.Count()));
-
-                return s;
-            }
+            return true;
         }
+        //private static List<Buy> allbuys = new List<Buy>();
+        //private static readonly System.Random r = new System.Random();
 
-        public static void RemovePlannedFlagForAllBuys()
-        {
-            for (int i = 0; i < allbuys.Count; i++)
-            {
-                allbuys[i].IsPlanned = false;
-            }
-        }
+        //public static void AddBuy(Buy buy)
+        //{
+        //    allbuys.Add(buy);
+        //}
 
-        public static void SetBuyAsUsed(string Name)
-        {
-            for (int i = 0; i < allbuys.Count; i++)
-            {
-                if (allbuys[i].Name == Name)
-                {
-                    allbuys[i].IsUsed = true;
+        //public static Buy GetConvinceBuy()
+        //{
+        //    Buy[] q;
 
-                    SharedHelper.LogWarning("Buy '" + Name + "' is set to used. Buy text: '" + allbuys[i].Text + "'");
+        //    q = allbuys.Where(j => j.IsUsed == false && j.IsPlanned == false).ToArray();
 
-                    return;
-                }
-            }
+        //    if (q.Length > 0) //at least one found
+        //    {
+        //        Buy s = q.ElementAt(r.Next(0, q.Count()));
 
-            SharedHelper.LogError("Buy '" + Name + "' not found in SetBuyAsUsed!");
-        }
+        //        return s;
+        //    }
+        //    else //0 found
+        //    {
+        //        //remove all used , because there are no more buy statements to use, so we start again
+        //        for (int i = 0; i < allbuys.Count; i++)
+        //        {
+        //            allbuys[i].IsUsed = false;
+        //        }
 
-        public static Buy GetBuyByName(string Name) //by ID
-        {
-            var q = allbuys.Where(j => j.Name == Name).SingleOrDefault();
+        //        q = allbuys.Where(j => j.IsUsed == false && j.IsPlanned == false).ToArray();
 
-            return q;
-        }
+        //        Buy s = q.ElementAt(r.Next(0, q.Count()));
+
+        //        return s;
+        //    }
+        //}
+
+        //public static void RemovePlannedFlagForAllBuys()
+        //{
+        //    for (int i = 0; i < allbuys.Count; i++)
+        //    {
+        //        allbuys[i].IsPlanned = false;
+        //    }
+        //}
+
+        //public static void SetBuyAsUsed(string Name)
+        //{
+        //    for (int i = 0; i < allbuys.Count; i++)
+        //    {
+        //        if (allbuys[i].Name == Name)
+        //        {
+        //            allbuys[i].IsUsed = true;
+
+        //            SharedHelper.LogWarning("Buy '" + Name + "' is set to used. Buy text: '" + allbuys[i].Text + "'");
+
+        //            return;
+        //        }
+        //    }
+
+        //    SharedHelper.LogError("Buy '" + Name + "' not found in SetBuyAsUsed!");
+        //}
+
+        //public static Buy GetBuyByName(string Name) //by ID
+        //{
+        //    var q = allbuys.Where(j => j.Name == Name).SingleOrDefault();
+
+        //    return q;
+        //}
+
+        //public static Buy[] GetAll()
+        //{
+        //    return allbuys.ToArray();
+        //}
     }
 }

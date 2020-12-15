@@ -10,8 +10,9 @@ namespace Companion.KorraAI.Models
 {
     public class ModelContext
     {
-        public IItems Items;
-        public IPhrases Phrases;
+        public IItemsLoader Items;
+        public IBasePhrases BasePhrases;
+        //public IExtendedPhrases ExtendedPhrases;
         public ISpeechAdaptation SpeechAdaptation;
     }
 }

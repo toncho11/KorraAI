@@ -9,8 +9,24 @@ using Companion.KorraAI;
 
 namespace Companion.KorraAI.Models.Joi
 {
-    public class PhrasesEN : IPhrases
+    public class PhrasesEN : IJoiPhrases
     {
+        PureFacts factsManager;
+
+        public PhrasesEN(ItemManager[] managers)
+        {
+            #region Get Fact Manager
+            PureFacts pfManager = (PureFacts)managers.SingleOrDefault(x => x is PureFacts);
+            if (pfManager == null)
+            {
+                SharedHelper.LogError("No item managers in PhrasesEN.");
+                return;
+            }
+            #endregion
+
+            this.factsManager = pfManager;
+        }
+
         #region last used
         private string lastClothesAnnouncementUsed = "";
         private string lastGoOutAnnouncementUsed = "";
@@ -21,19 +37,19 @@ namespace Companion.KorraAI.Models.Joi
 
         public string SayHello()
         {
-            PureFact numberOfStarts = PureFacts.GetFacfByName("SystemStartsCount");
+            PureFact numberOfStarts = (PureFact)factsManager.GetByName("SystemStartsCount");
             int numberOfStartsInt = Convert.ToInt32(numberOfStarts.Value);
 
             string text = "";
 
-            if (!string.IsNullOrEmpty(PureFacts.GetValueByName("UserName"))) //we know how the user's name
+            if (!string.IsNullOrEmpty(factsManager.GetValueByName("UserName"))) //we know how the user's name
             {
                 text = KorraModelHelper.GetChance(new string[] { "Hi", "Hello", "Hey", });
 
                 if (KorraModelHelper.GetChance(3) && numberOfStartsInt > 1 && (text == "Hi" || text == "Hello")) //again version
                     text += " again";
 
-                text += " " + PureFacts.GetValueByName("UserName");
+                text += " " + factsManager.GetValueByName("UserName");
             }
             else //we do NOT know how the user's name
             {
@@ -49,7 +65,7 @@ namespace Companion.KorraAI.Models.Joi
         {
             string text = "OK, ";
 
-            string Username = PureFacts.GetValueByName("UserName");
+            string Username = factsManager.GetValueByName("UserName");
             if (!string.IsNullOrEmpty(Username)) Username = KorraModelHelper.FirstCharToUpper(Username);
 
             text += KorraModelHelper.GetChance(new string[] { (KorraModelHelper.GetChance(3)) ? "bye" : "goodbye", "See you soon", "Have a good day" });
@@ -79,7 +95,7 @@ namespace Companion.KorraAI.Models.Joi
 
         public string GoOutAnnoucement()
         {
-            PureFact factJob = PureFacts.GetFacfByName("UserHasJob");
+            PureFact factJob = (PureFact)factsManager.GetByName("UserHasJob");
 
             bool userWorks = factJob.IsAnswered && this.IsYes(factJob.Value);
 
@@ -232,7 +248,7 @@ namespace Companion.KorraAI.Models.Joi
 
         public bool IsAnsweredAndUserIsMan()
         {
-            PureFact fact = PureFacts.GetFacfByName("UserSex");
+            PureFact fact = (PureFact)factsManager.GetByName("UserSex");
 
             if (fact.IsAnswered && fact.Value.ToLower() == Male().ToLower()) //should be changed for other languages
                 return true;
@@ -242,7 +258,7 @@ namespace Companion.KorraAI.Models.Joi
 
         public bool IsAnsweredAndUserIsWoman()
         {
-            PureFact fact = PureFacts.GetFacfByName("UserSex");
+            PureFact fact = (PureFact)factsManager.GetByName("UserSex");
 
             if (fact.IsAnswered && fact.Value.ToLower() == Female().ToLower()) //should be changed for other languages
                 return true;

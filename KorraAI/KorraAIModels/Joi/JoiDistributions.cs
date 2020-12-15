@@ -9,7 +9,7 @@ using ProbCSharp;
 
 namespace Companion.KorraAI.Models.Joi
 {
-    public class JoiDistributions : IDistributions
+    public class JoiDistributions : IBaseDistributions
     {
         private static Queue<float> allInteractionPauses = new Queue<float>();
         private static Queue<float> allPausesSmiles = new Queue<float>();
@@ -20,8 +20,15 @@ namespace Companion.KorraAI.Models.Joi
 
         private static Random pauseUniformAfterReaction = new Random(Guid.NewGuid().GetHashCode());
 
+        #region For the Joke Distribution
+        private static PureFact factEasilyOffended;
+        private static bool romanticJokesFirst;
+        private static bool romanticJokesLast;
+        #endregion
+
+
         //TODO: addt the ability the N distribution to be changed over time
-        float IDistributions.GetNextInteactionPause(bool isReacting)
+        float IBaseDistributions.GetNextInteactionPause(bool isReacting)
         {
             if (!isReacting)
             {
@@ -44,7 +51,7 @@ namespace Companion.KorraAI.Models.Joi
 
                 return allInteractionPauses.Dequeue();
             }
-            else //if it is a response, we try to react quickly
+            else //if it is a response, we try to react quicker than starting a new interaction
             {
                 float value = pauseUniformAfterReaction.Next(1, 2) / 10f;
                 SharedHelper.Log("Pause time set as a reaction to question: " + value);
@@ -52,7 +59,7 @@ namespace Companion.KorraAI.Models.Joi
             }
         }
 
-        float IDistributions.NextQuestionTimeout()
+        float IBaseDistributions.NextQuestionTimeout()
         {
             if (allQuestionTimeouts.Count == 0)
             {
@@ -69,7 +76,7 @@ namespace Companion.KorraAI.Models.Joi
             return allQuestionTimeouts.Dequeue();
         }
 
-        float IDistributions.NextSmilePauseTime()
+        float IBaseDistributions.NextSmilePauseTime()
         {
             if (allPausesSmiles.Count == 0)
             {
@@ -90,7 +97,7 @@ namespace Companion.KorraAI.Models.Joi
             return allPausesSmiles.Dequeue();
         }
 
-        float IDistributions.NextTimeDurationEyesStayFocusedOnCameraAfterStartedTalking()
+        float IBaseDistributions.NextTimeDurationEyesStayFocusedOnCameraAfterStartedTalking()
         {
             if (allTimesEyesFocusedOnCameraAfterStartedTalking.Count == 0)
             {
@@ -112,11 +119,14 @@ namespace Companion.KorraAI.Models.Joi
             return allTimesEyesFocusedOnCameraAfterStartedTalking.Dequeue();
         }
 
-        public void ForceGenerateOutfits(int[] values, int lastOutfitUsed)
+        public void InitOutfitsDistribution(int[] activeOutfitsIndexes, int lastOutfitUsed)
         {
             allOutfitsChange.Clear();
 
-            int[] sequence = SharedHelper.GeneratePermutationArray(values, 18, lastOutfitUsed);
+            //Disable some outfits
+            activeOutfitsIndexes = activeOutfitsIndexes.Where(val => val != 6 && val !=7 && val !=8).ToArray();
+
+            int[] sequence = SharedHelper.GeneratePermutationArray(activeOutfitsIndexes, 18, lastOutfitUsed);
 
             for (int i = 0; i < sequence.Length; i++)
             {
@@ -129,27 +139,39 @@ namespace Companion.KorraAI.Models.Joi
             {
                 singleStringAllOutfitsChanges += allOutfitsChange.ToArray()[i] + ",";
             }
-            #endregion
             //SharedHelper.Log("singleStringAllOutfitsChanges:\r\n" + singleStringAllOutfitsChanges);
+            #endregion
+
         }
 
-        public int GetNextOutfit(int[] activeOutfitsIndexes, int lastOutfitUsed)
+        public int NextOutfit(int[] activeOutfitsIndexes, int lastOutfitUsed)
         {
             if (allOutfitsChange.Count == 0)
             {
-                ForceGenerateOutfits(activeOutfitsIndexes, lastOutfitUsed);
+                InitOutfitsDistribution(activeOutfitsIndexes, lastOutfitUsed);
             }
 
             return allOutfitsChange.Dequeue();
         }
 
-        public PrimitiveDist<string> JokesDistribution(PureFact factEasilyOffended, bool romanticJokesFirst, bool romanticJokesLast)
+        public void InitJokesDistribution(PureFact p_factEasilyOffended, bool p_romanticJokesFirst, bool p_romanticJokesLast)
+        {
+            factEasilyOffended = p_factEasilyOffended;
+            romanticJokesFirst = p_romanticJokesFirst;
+            romanticJokesLast = p_romanticJokesLast;
+
+        }
+
+        private PrimitiveDist<string> GetJokeDistribution()
         {
             var allJokes = from joke in JokesProvider.GetAll()
                            where joke.IsUsed == false && joke.IsPlanned == false
                            select joke;
 
-            bool isUserEasilyOffended = (factEasilyOffended == null) || !factEasilyOffended.IsAnswered || (factEasilyOffended.IsAnswered && factEasilyOffended.Value == "Yes"); //NOT GOOD !!!!!!
+            //by default it is easily offended
+            bool isUserEasilyOffended = (factEasilyOffended == null) //if fact does not exist
+                                        || !factEasilyOffended.IsAnswered //if not answered
+                                        || (factEasilyOffended.IsAnswered && factEasilyOffended.Value.ToLower() == "yes"); //NOT GOOD !!!!!!
 
             List<ItemProb<string>> itemProbs = new List<ItemProb<string>>();
 
@@ -212,9 +234,7 @@ namespace Companion.KorraAI.Models.Joi
 
             //SharedHelper.Log("Jokes histogram:\r\n" + jokestDistF.Histogram());
 
-            var jokesDist = jokestDistF.ToSampleDist();
-
-            return jokesDist;
+            return jokestDistF.ToSampleDist();
         }
 
         public int NextSmileVersion()
@@ -248,6 +268,31 @@ namespace Companion.KorraAI.Models.Joi
             }
 
             return allSmileVersions.Dequeue();
+        }
+
+        /// <summary>
+        /// Uses config information from the model to get a sample from a distribution over the jokes
+        /// </summary>
+        /// <returns></returns>
+        public Joke NextJoke()
+        {
+            Joke selectedJoke;
+
+            var jokeDistribution = GetJokeDistribution();
+
+            if (jokeDistribution == null)
+            {
+                //SharedHelper.LogError("Joke distribution is null");
+                return null;
+            }
+
+            var selectionName = jokeDistribution.Sample();
+
+            selectedJoke = JokesProvider.GetJokeByName(selectionName);
+
+            //SharedHelper.Log("GetPureFactAbouUser: selectionName " + selectionName);
+
+            return selectedJoke;
         }
     }
 }

@@ -10,6 +10,8 @@ namespace Companion
     {
         public static string MakeSuggestion { get { return "MakeSuggestion"; } }
 
+        public static string PureFact { get { return "PureFact"; } }
+
         public static string AskUncertanFactQuestion { get { return "AskUncertanFactQuestion"; } }
 
         public static string AskPureFactQuestionAboutUser { get { return "AskPureFactQuestionAboutUser"; } }
@@ -37,15 +39,16 @@ namespace Companion
 
         public static string ListenToSong { get { return "SuggestListenToSong"; } }
 
-        public static string GoToGym { get { return "SuggestGoToGym"; } }
+        public static string DoSport { get { return "DoSport"; } }
     }
 
     public enum PureFactType
     {
       AboutBot,
       AboutUser,
-      UIQuestion,
       JokeQuestion,
+
+      UIQuestion,
       BuyQuestion,
       System
     };

@@ -9,56 +9,60 @@ using ProbCSharp;
 
 namespace Companion.KorraAI
 {
-    public static class PureFacts
+    public class PureFacts : ItemManager
     {
-        static List<PureFact> list = new List<PureFact>();
+        //static List<PureFact> list = new List<PureFact>();
 
-        public static void AddPureFact(PureFact fact)
+        public PureFacts(PureFact fact) : base(fact)
         {
-            //check if ID already exists
-            bool existsAlready = list.Any(cus => cus.Name == fact.Name);
-
-            if (existsAlready)
-                SharedHelper.Log("Pure Fact with this Name already exists: '" + fact.Name + "'. Second one was ignored.");
-            else
-            list.Add(fact);
         }
 
-        public static List<PureFact> GetList()
-        {
-            return list;
-        }
+        //public override void Add(Item fact)
+        //{
+        //    //check if ID already exists
+        //    bool existsAlready = list.Any(cus => cus.Name == fact.Name);
 
-        public static void SetAsUsed(string name)
-        {
-            SetAsUsed(name, true);
-        }
+        //    if (existsAlready)
+        //        SharedHelper.Log("Pure Fact with this Name already exists: '" + fact.Name + "'. Second one was ignored.");
+        //    else
+        //    list.Add((PureFact)fact);
+        //}
 
-        public static void SetAsUsed(string name, bool isUsed)
-        {
-            for (int i = 0; i < list.Count; i++)
-            {
-                if (list[i].Name == name)
-                {
-                    SharedHelper.Log("Set used to " + isUsed + " : " + list[i].Name);
-                    list[i].IsUsed = isUsed;
+        //public override PureFact[] GetAll()
+        //{
+        //    return list.ToArray();
+        //}
 
-                    return;
-                }
-            }
+        //public static void SetAsUsed(string name)
+        //{
+        //    SetAsUsed(name, true);
+        //}
 
-            SharedHelper.LogError("Pure Fact Name '" + name + "' not found in SetAsUsed!");
-        }
+        //public static void SetAsUsed(string name, bool isUsed)
+        //{
+        //    for (int i = 0; i < list.Count; i++)
+        //    {
+        //        if (list[i].Name == name)
+        //        {
+        //            SharedHelper.Log("Set used to " + isUsed + " : " + list[i].Name);
+        //            list[i].IsUsed = isUsed;
 
-        public static void MarkForSaving(string name)
+        //            return;
+        //        }
+        //    }
+
+        //    SharedHelper.LogError("Pure Fact Name '" + name + "' not found in SetAsUsed!");
+        //}
+
+        public void MarkForSaving(string name)
         {
             SharedHelper.Log("Marking for saving: " + name);
 
-            for (int i = 0; i < list.Count; i++)
+            for (int i = 0; i < items.Count; i++)
             {
-                if (list[i].Name == name)
+                if (items[i].Name == name)
                 {
-                    if (list[i].Name != "UserMovieYesterday")
+                    if (items[i].Name != "UserMovieYesterday")
                         FlagsShared.RequestSavePersistentData = true;
 
                     return;
@@ -68,43 +72,45 @@ namespace Companion.KorraAI
             SharedHelper.LogError("Pure Fact Name '" + name + "'not found in MarkForSaving!");
         }
 
-        public static void SetAsPlanned(string name)
+        //public static void SetAsPlanned(string name)
+        //{
+        //    for (int i = 0; i < list.Count; i++)
+        //    {
+        //        if (list[i].Name == name)
+        //        {
+        //            //UnityEngine.Debug.Log("Set to used true: " + list[i].Name);
+        //            list[i].IsPlanned = true;
+        //            return;
+        //        }
+        //    }
+
+        //    SharedHelper.LogError("Pure Fact Name not found in SetAsUsed!");
+        //}
+
+        public void SetValue(string Name, string Value)
         {
-            for (int i = 0; i < list.Count; i++)
+            foreach (var item in items)
             {
-                if (list[i].Name == name)
+                PureFact f = (PureFact)item;
+                if (f.Name == Name)
                 {
-                    //UnityEngine.Debug.Log("Set to used true: " + list[i].Name);
-                    list[i].IsPlanned = true;
+                    SharedHelper.LogWarning("Set as answered: " + f.Name + " with value: '" + Value + "'");
+                    f.Value = Value;
+                    f.IsAnswered = true;
+
                     return;
                 }
             }
-
-            SharedHelper.LogError("Pure Fact Name not found in SetAsUsed!");
         }
 
-        public static void SetValue(string Name, string Value)
+        public string GetValueByName(string name)
         {
-            foreach (var q in list)
+            foreach (var item in items)
             {
-                if (q.Name == Name)
+                PureFact f = (PureFact)item;
+                if (f.Name == name)
                 {
-                    SharedHelper.LogWarning("Set as answered: " + q.Name + " with value: '" + Value + "'");
-                    q.Value = Value;
-                    q.IsAnswered = true;
-
-                    return;
-                }
-            }
-        }
-
-        public static string GetValueByName(string name)
-        {
-            foreach (var q in list)
-            {
-                if (q.Name == name)
-                {
-                    return q.Value;
+                    return f.Value;
                 }
             }
 
@@ -113,50 +119,52 @@ namespace Companion.KorraAI
             return "";
         }
 
-        public static PureFact GetFacfByName(string name)
-        {
-            foreach (var q in list)
-            {
-                if (q.Name == name)
-                {
-                    return q;
-                }
-            }
+        //public static PureFact GetByName(string name)
+        //{
+        //    foreach (var q in list)
+        //    {
+        //        if (q.Name == name)
+        //        {
+        //            return q;
+        //        }
+        //    }
 
-            SharedHelper.LogError("GetFacfByName: Pure Fact Name '" + name + "'not found");
+        //    SharedHelper.LogError("GetFacfByName: Pure Fact Name '" + name + "'not found");
 
-            return null;
-        }
+        //    return null;
+        //}
 
-        public static void RemovePlannedFlagForAllPureFacts()
-        {
-            for (int i = 0; i < list.Count; i++)
-            {
-                list[i].IsPlanned = false;
-            }
-        }
+        //public static void RemovePlannedFlagForAllPureFacts()
+        //{
+        //    for (int i = 0; i < list.Count; i++)
+        //    {
+        //        list[i].IsPlanned = false;
+        //    }
+        //}
 
         /// <summary>
         /// Used to delete answers that are invalid after validation: ex. age is not a valid number
         /// </summary>
-        public static void DropAnswer(string Name)
+        public void DropAnswer(string Name)
         {
-            foreach (var q in list)
+            foreach (var item in items)
             {
-                if (q.Name == Name)
+                PureFact f = (PureFact)item;
+                if (f.Name == Name)
                 {
-                    SharedHelper.LogWarning("DropAnswer: " + q.Name);
-                    q.Value = "";
-                    q.IsAnswered = false;
-                    q.IsUsed = false;
+                    SharedHelper.LogWarning("DropAnswer: " + f.Name);
+                    f.Value = "";
+                    f.IsAnswered = false;
+                    f.IsUsed = false;
                     return;
                 }
             }
         }
 
-        public static PureFact GetPureFactAbouUser()
+        public PureFact GetPureFactAbouUser()
         {
-            var q = (from pf in PureFacts.GetList()
+            var q = (from item in items
+                     let pf = (PureFact)item
                      where pf.Type == PureFactType.AboutUser && pf.IsPlanned == false && pf.IsUsed == false
                      select pf).ToArray();
 
@@ -195,7 +203,7 @@ namespace Companion.KorraAI
 
                 var selectionName = pureFactDist.Sample();
 
-                PureFact selectedPureFact = PureFacts.GetFacfByName(selectionName);
+                PureFact selectedPureFact = (PureFact)GetByName(selectionName);
 
                 //SharedHelper.Log("GetPureFactAbouUser: selectionName " + selectionName);
 

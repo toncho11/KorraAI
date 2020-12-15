@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Companion.KorraAI.Models
 {
-    public interface IDistributions
+    public interface IBaseDistributions
     {
         /// <summary>
         /// There are several versions of the smile face expressions
@@ -45,7 +45,7 @@ namespace Companion.KorraAI.Models
         /// </summary>
         /// <param name="lastOutfitUsed"></param>
         /// <returns></returns>
-        int GetNextOutfit(int[] activeOutfitsIndexes, int lastOutfitUsed);
+        int NextOutfit(int[] activeOutfitsIndexes, int lastOutfitUsed);
 
         /// <summary>
         /// It does the actual job of generating a sequence of outfits, this method is called automatically from GetNextOutfit
@@ -53,8 +53,6 @@ namespace Companion.KorraAI.Models
         /// </summary>
         /// <param name="values"></param>
         /// <param name="lastOutfitUsed"></param>
-        void ForceGenerateOutfits(int[] values, int lastOutfitUsed);
-
-        PrimitiveDist<string> JokesDistribution(PureFact factEasilyOffended, bool romanticJokesFirst, bool romanticJokesLast);
+        void InitOutfitsDistribution(int[] values, int lastOutfitUsed);
     }
 }

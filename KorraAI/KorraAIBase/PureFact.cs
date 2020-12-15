@@ -14,6 +14,11 @@ namespace Companion.KorraAI
     /// </summary>
     public class PureFact : Item
     {
+        public PureFact()
+        {
+            this.Category = ActionsEnum.PureFact;
+        }
+
         public PureFact(string p_Name, PureFactType p_type, PureFactQuestionFunction p_question, string[] p_AllPossibleAnswers, UIAnswer p_UI)
         {
             Name = p_Name;
@@ -21,8 +26,8 @@ namespace Companion.KorraAI
             QuestionFunc = p_question;
             AllPossibleAnswers = p_AllPossibleAnswers;
             UI = p_UI;
-
             ResponseFunc = null;
+            SetCategory(p_type);
         }
 
         public PureFact(string p_Name, PureFactType p_type, string p_Question, string p_Value, string p_Acknowledgement, UIAnswer p_UI)
@@ -33,8 +38,8 @@ namespace Companion.KorraAI
             Value = p_Value;
             Acknowledgement = p_Acknowledgement;
             UI = p_UI;
-
             ResponseFunc = null;
+            SetCategory(p_type);
         }
 
         /// <summary>
@@ -54,8 +59,8 @@ namespace Companion.KorraAI
             AllPossibleAnswers = p_AllPossibleAnswers;
             Acknowledgement = p_Acknowledgement;
             UI = p_UI;
-
             ResponseFunc = null;
+            SetCategory(p_type);
         }
 
         public PureFact(string p_Name, PureFactType p_type, string p_Question, PureFactResponseFunction pf, UIAnswer p_UI)
@@ -64,8 +69,8 @@ namespace Companion.KorraAI
             Type = p_type;
             question = p_Question;
             UI = p_UI;
-
             ResponseFunc = pf;
+            SetCategory(p_type);
         }
 
         public PureFact(string p_Name, PureFactType p_type, string p_Question, string[] p_AllPossibleAnswers, PureFactResponseFunction p_response, UIAnswer p_UI, ContentType type)
@@ -76,8 +81,8 @@ namespace Companion.KorraAI
             AllPossibleAnswers = p_AllPossibleAnswers;
             UI = p_UI;
             ContentType = type;
-
             ResponseFunc = p_response;
+            SetCategory(p_type);
         }
        
 
@@ -97,8 +102,7 @@ namespace Companion.KorraAI
             statementOnNegativeResponse = p_StatementOnNegativeResponse;
 
             ResponseFunc = null;
-
-
+            SetCategory(p_type);
         }
 
         public PureFact(string p_Name, PureFactType p_type, string p_Question, string[] p_AllPossibleAnswers,
@@ -120,6 +124,8 @@ namespace Companion.KorraAI
 
             FacialExpressionOnPositiveResponse = FacialExpressionOnPositiveResponseFromUser;
             FacialExpressionOnNegativeResponse = FacialExpressionOnNegativeResponseFromUser;
+
+            SetCategory(p_type);
         }
 
         //public string Name { get; set; }
@@ -234,5 +240,21 @@ namespace Companion.KorraAI
         //public string FacialExpressionOnReaction;
 
         #endregion
+
+        private void SetCategory(PureFactType p_type)
+        {
+            this.Category = ActionsEnum.PureFact;
+
+            if (p_type == PureFactType.AboutUser)
+                this.SubCategory = ActionsEnum.AskPureFactQuestionAboutUser;
+
+            else if (p_type == PureFactType.AboutBot)
+                this.SubCategory = ActionsEnum.SharePureFactInfoAboutBot;
+
+            else if (p_type != PureFactType.UIQuestion && p_type != PureFactType.System && p_type != PureFactType.BuyQuestion && p_type != PureFactType.JokeQuestion)
+            {
+                SharedHelper.LogError("Category was not set for fact '" + p_type.ToString() + "'");
+            }
+        }
     }
 }

@@ -8,6 +8,6 @@ namespace Companion.KorraAI.Models
 {
     public interface ISpeechAdaptation
     {
-        Queue<CommItem> ProcessItems(Queue<CommItem> input, IPhrases phrases);
+        Queue<CommItem> ProcessItems(Queue<CommItem> input, ItemManager[] managers);
     }
 }

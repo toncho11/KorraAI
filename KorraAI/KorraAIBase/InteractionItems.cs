@@ -6,78 +6,112 @@ using System.Threading.Tasks;
 
 namespace Companion.KorraAI
 {
-    public class Joke : Item
+    /// <summary>
+    /// A simple text to uttered by the bot
+    /// </summary>
+    public class Statement : Item
     {
-        public Joke(string text, bool isDelayed) //TODO: add 'doesNeedAnnouncement'
+        public string Text;
+
+        public Statement()
+        {
+            Name = Guid.NewGuid().ToString();
+            IsUsed = false;
+            Category = ActionsEnum.MakeGeneralStatement;
+        }
+
+        public Statement(string text)
         {
             Name = Guid.NewGuid().ToString();
             Text = text;
             IsUsed = false;
-            //IsDelayedJoke = isDelayed;
+            Category = ActionsEnum.MakeGeneralStatement;
+        }
+    }
+
+    public class Joke : Statement
+    {
+        void Init()
+        {
+            Name = Guid.NewGuid().ToString();
+            Category = ActionsEnum.MakeSuggestion;
+            SubCategory = SuggestionsEnum.TellJoke;
+        }
+
+        public Joke(string text, bool isDelayed)
+        {
+            Init();
+            Text = text;
+            IsUsed = false;
             IsPureFact = false;
+            
         }
 
         public Joke(string text)
         {
-            Name = Guid.NewGuid().ToString();
+            Init();
             Text = text;
             IsUsed = false;
-
-            //IsDelayedJoke = false;
             IsPureFact = false;
+            
         }
 
         public Joke(string name, string text)
         {
+            Init();
             Name = name;
             Text = text;
             IsUsed = false;
-
-            //IsDelayedJoke = false;
             IsPureFact = false;
         }
 
         public Joke(string name, string text, bool isDelayed)
         {
+            Init();
             Name = name;
             Text = text;
             IsUsed = false;
-            //IsDelayedJoke = isDelayed;
             IsPureFact = false;
         }
 
         public Joke(string name, string text, bool isDelayed, string faceExp)
         {
+            Init();
+
             Name = name;
             Text = text;
             IsUsed = false;
-            //IsDelayedJoke = isDelayed;
             IsPureFact = false;
             FaceExpression = faceExp;
         }
 
         public Joke(string name, string text, ContentType type, string faceExp)
         {
+            Init();
+
             Name = name;
             Text = text;
             IsUsed = false;
             ContentType = type;
             IsPureFact = false;
-            FaceExpression = faceExp;
+            FaceExpression = faceExp;;
         }
 
         public Joke(string name, string text, bool isDelayed, bool isPureFact, UIAnswer pureFactUI)
         {
+            Init();
+
             Name = name;
             Text = text;
             IsUsed = false;
-            //IsDelayedJoke = isDelayed;
             IsPureFact = isPureFact;
             PureFactUI = pureFactUI;
         }
 
         public Joke(string name, string text, ContentType type)
         {
+            Init();
+
             Name = name;
             Text = text;
             IsUsed = false;
@@ -85,17 +119,11 @@ namespace Companion.KorraAI
             IsPureFact = false;
         }
 
-        //public string Name { get; set; }
-        public string Text;
-
         //For men
         //For women
         //Only for parents
-
-        //Some jokes are not appropriate in the beginning
-        //public bool IsDelayedJoke;
-
         //public bool DoesNeedAnnouncement;
+
         #region Pure Fact Joke
         public bool IsPureFact;
 
@@ -111,6 +139,9 @@ namespace Companion.KorraAI
         {
             Name = name;
             Url = url;
+
+            Category = ActionsEnum.MakeSuggestion;
+            SubCategory = SuggestionsEnum.ListenToSong;
         }
 
         //public string Name { get; set; }
@@ -131,24 +162,40 @@ namespace Companion.KorraAI
         }
     }
 
-    public class Sport : Item
+    public class Sport : Statement
     {
-        public Sport(string text)
+        void Init()
         {
             Name = Guid.NewGuid().ToString();
+            Category = ActionsEnum.MakeSuggestion;
+            SubCategory = SuggestionsEnum.DoSport;
+        }
+
+        public Sport(string text)
+        {
+            Init();
+
             Text = text;
             IsUsed = false;
         }
 
         //public string Name { get; set; }
-        public string Text;
+        //public string Text;
     }
 
-    public class Movie : Item
+    public class Movie : Statement
     {
-        public Movie(string text, bool isTVSeries, bool isReleased)
+        void Init()
         {
             Name = Guid.NewGuid().ToString();
+            Category = ActionsEnum.MakeSuggestion;
+            SubCategory = SuggestionsEnum.WatchMovie;
+        }
+
+        public Movie(string text, bool isTVSeries, bool isReleased)
+        {
+            Init();
+
             Text = text;
             IsUsed = false;
             IsTvSeries = isTVSeries;
@@ -157,6 +204,8 @@ namespace Companion.KorraAI
 
         public Movie(string name, string text, bool isTVSeries, bool isReleased)
         {
+            Init();
+
             Name = name;
             Text = text;
             IsUsed = false;
@@ -165,17 +214,24 @@ namespace Companion.KorraAI
         }
 
         //public string Name { get; set; }
-        public string Text;
+        //public string Text;
 
         public bool IsTvSeries;
         public bool IsReleased;
     }
 
-    public class Buy : Item
+    public class Buy : Statement
     {
-        public Buy(string text)
+        void Init()
         {
             Name = Guid.NewGuid().ToString();
+            Category = ActionsEnum.ConvinceBuyStatement;
+        }
+
+        public Buy(string text)
+        {
+            Init();
+
             Text = text;
             IsUsed = false;
         }
@@ -189,7 +245,7 @@ namespace Companion.KorraAI
         //}
 
         //public string Name { get; set; }
-        public string Text;
+        //public string Text;
 
         //public string FaceExpression;
     }

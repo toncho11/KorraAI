@@ -45,6 +45,9 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="UnityEngine">
+      <HintPath>..\..\..\Program Files\Unity\Hub\Editor\2017.4.30f1\Editor\Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="KorraAIBase\DataProviders.cs" />
@@ -56,15 +59,20 @@
     <Compile Include="KorraAIBase\PureFact.cs" />
     <Compile Include="KorraAIBase\UncertainFact.cs" />
     <Compile Include="KorraAIModels\IDistributions.cs" />
-    <Compile Include="KorraAIModels\IItems.cs" />
+    <Compile Include="KorraAIModels\IItemsLoader.cs" />
     <Compile Include="KorraAIModels\IKorraAIModel.cs" />
+    <Compile Include="KorraAIModels\IKorraAISampler.cs" />
     <Compile Include="KorraAIModels\IPhrases.cs" />
     <Compile Include="KorraAIModels\ISpeechAdaptation.cs" />
+    <Compile Include="KorraAIModels\Joi\EN\IJoiPhrases.cs" />
     <Compile Include="KorraAIModels\Joi\EN\Items.cs" />
     <Compile Include="KorraAIModels\Joi\EN\Phrases.cs" />
     <Compile Include="KorraAIModels\Joi\EN\SpeechAdaptation.cs" />
+    <Compile Include="KorraAIModels\Joi\ItemDefinitions.cs" />
+    <Compile Include="KorraAIModels\Joi\ItemProviders.cs" />
     <Compile Include="KorraAIModels\Joi\JoiDistributions.cs" />
     <Compile Include="KorraAIModels\Joi\JoiModel.cs" />
+    <Compile Include="KorraAIModels\Joi\JoiSampler.cs" />
     <Compile Include="KorraAIModels\Joi\JoyModelTriggers.cs" />
     <Compile Include="KorraAIModels\KorraModelHelper.cs" />
     <Compile Include="KorraAIModels\ModelContext.cs" />
@@ -72,15 +80,6 @@
     <Compile Include="KorraAIModels\ProbVariables.cs" />
     <Compile Include="KorraAIModels\SelectKorraAIModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="KorraAIBase\DataProviders.cs.meta" />
-    <None Include="KorraAIBase\Definitions.cs.meta" />
-    <None Include="KorraAIBase\Facts.cs.meta" />
-    <None Include="KorraAIBase\InteractionItems.cs.meta" />
-    <None Include="KorraAIBase\KorraAISampler.cs.meta" />
-    <None Include="KorraAIBase\PureFact.cs.meta" />
-    <None Include="KorraAIBase\UncertainFact.cs.meta" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\KorraAIShared\KorraAIShared.csproj">

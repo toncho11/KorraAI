@@ -159,11 +159,21 @@ namespace Companion.KorraAI.Models.Joi
         public bool Process(bool isPureFactUpdated, TimeSpan timeSinceStart, IKorraAIModel model)
         {
             //SharedHelper.LogWarning("Inside movies trigger");
+            #region Get Fact Manager
+            PureFacts pfManager = (PureFacts)model.ItemProviders.SingleOrDefault(x => x is PureFacts);
+            if (pfManager == null)
+            {
+                SharedHelper.LogError("No manager in Process in MoviesModelUpdateTrigger.");
+                return false;
+            }
+            #endregion
 
             var context = model.GetContext();
 
-            PureFact factJob = PureFacts.GetFacfByName("UserHasJob");
-            PureFact factWatchedMovieYesterday = PureFacts.GetFacfByName("UserMovieYesterday");
+            PureFact factJob = (PureFact)pfManager.GetByName("UserHasJob");
+            PureFact factWatchedMovieYesterday = (PureFact)pfManager.GetByName("UserMovieYesterday");
+
+            if (factJob == null || factWatchedMovieYesterday == null) SharedHelper.LogError("factJob or factWatchedMovieYesterday is NULL in MoviesModelUpdateTrigger.");
 
             if (!IsTimeOfDayUpdated && !isPureFactUpdated) return false;
 
@@ -174,24 +184,24 @@ namespace Companion.KorraAI.Models.Joi
             //TODO: this model can be replaced by a Bayesian network, because of the too many IFs
 
             //if no job or weekend 
-            if ((factJob.IsAnswered && context.Phrases.IsNo(factJob.Value)) || StatesShared.IsWeekend)
+            if ((factJob.IsAnswered && context.BasePhrases.IsNo(factJob.Value)) || StatesShared.IsWeekend)
             {
                 ProbVariables.Bot.SuggestToWatchMovie = BernoulliF(Prob(0.18));
                 //KorraBaseHelper.Log("Prob SuggestToWatchMovie changed to: 0.18, no job or weekend");
             }
-            else if (factJob.IsAnswered && context.Phrases.IsYes(factJob.Value)) //if has job
+            else if (factJob.IsAnswered && context.BasePhrases.IsYes(factJob.Value)) //if has job
             {
                 #region working and evening
                 if (StatesShared.IsEvening /*TODO: or after work hours*/)
                 {
                     //has NOT watched movie yesterday (is working and evening)
-                    if (factWatchedMovieYesterday.IsAnswered && context.Phrases.IsNo(factJob.Value))
+                    if (factWatchedMovieYesterday.IsAnswered && context.BasePhrases.IsNo(factJob.Value))
                     {
                         ProbVariables.Bot.SuggestToWatchMovie = BernoulliF(Prob(0.18));
                         //KorraBaseHelper.Log("Prob SuggestToWatchMovie changed to: 0.18, evening");
                     }
                     //has watched movie yesterday (is working and evening)
-                    else if (factWatchedMovieYesterday.IsAnswered && context.Phrases.IsYes(factJob.Value))
+                    else if (factWatchedMovieYesterday.IsAnswered && context.BasePhrases.IsYes(factJob.Value))
                     {
                         ProbVariables.Bot.SuggestToWatchMovie = BernoulliF(Prob(0.12));
                         // KorraBaseHelper.Log("Prob SuggestToWatchMovie changed to: 0.12. Watched movie yesterday.");
@@ -215,7 +225,7 @@ namespace Companion.KorraAI.Models.Joi
             {
                 executedCount = executedCount + 1;
 
-                SharedHelper.LogError("Prob SuggestToWatchMovie changed from " + oldSuggestToWatchMovie + " to: " + SharedHelper.GetProb(ProbVariables.Bot.SuggestToWatchMovie));
+                SharedHelper.Log("Prob SuggestToWatchMovie changed from " + oldSuggestToWatchMovie + " to: " + SharedHelper.GetProb(ProbVariables.Bot.SuggestToWatchMovie));
                 //return new ModelUpdateTriggerReturn { IsTriggered = true, IsResamplingRequired = true, Value = "" };
                 return true; //re-sampling requested
             }
@@ -235,6 +245,13 @@ namespace Companion.KorraAI.Models.Joi
     public class VideoGameSurpriseTrigger : IModelEvaluateTrigger
     {
         private int executedCount = 0;
+
+        IJoiPhrases phrases;
+
+        public VideoGameSurpriseTrigger(IJoiPhrases phrases)
+        {
+            this.phrases = phrases;//new PhrasesEN(model.);
+        }
 
         public string Name
         {
@@ -278,13 +295,24 @@ namespace Companion.KorraAI.Models.Joi
 
         public CommItem? Process(IKorraAIModel model)
         {
+            #region Get Fact Manager
+            PureFacts pfManager = (PureFacts)model.ItemProviders.SingleOrDefault(x => x is PureFacts);
+            if (pfManager == null)
+            {
+                SharedHelper.LogError("No manager in Facts Manager in MoviesModelUpdateTrigger.");
+                return null;
+            }
+            #endregion
+
             var context = model.GetContext();
             string text = "";
 
-            PureFact factLikesVideoGames = PureFacts.GetFacfByName("UserLikesVideoGames");
-            PureFact factThinksVideoGameIsGoodPresent = PureFacts.GetFacfByName("UserThinksVideoGameIsGoodPresent");
-            PureFact userAge = PureFacts.GetFacfByName("UserAge");
-            PureFact userSex = PureFacts.GetFacfByName("UserSex");
+            PureFact factLikesVideoGames = (PureFact)pfManager.GetByName("UserLikesVideoGames");
+            PureFact factThinksVideoGameIsGoodPresent = (PureFact)pfManager.GetByName("UserThinksVideoGameIsGoodPresent");
+            PureFact userAge = (PureFact)pfManager.GetByName("UserAge");
+            PureFact userSex = (PureFact)pfManager.GetByName("UserSex");
+
+            if (factLikesVideoGames == null || factThinksVideoGameIsGoodPresent == null || userAge == null || userSex == null) SharedHelper.LogError("factJob or factWatchedMovieYesterday is NULL in MoviesModelUpdateTrigger.");
 
             bool UserLikesVideoGamesAnswered = factLikesVideoGames.IsAnswered;
             bool UserThinksVideoGameIsGoodPresentAnswered = factThinksVideoGameIsGoodPresent.IsAnswered;
@@ -294,7 +322,7 @@ namespace Companion.KorraAI.Models.Joi
 
             if (!UserLikesVideoGamesAnswered) return null;
 
-            bool UserLikesVideoGamesAnsweredYES = context.Phrases.IsYes(factLikesVideoGames.Value); //only if answered 
+            bool UserLikesVideoGamesAnsweredYES = context.BasePhrases.IsYes(factLikesVideoGames.Value); //only if answered 
 
             //Calcualte 3 differerent surprises:
 
@@ -306,7 +334,7 @@ namespace Companion.KorraAI.Models.Joi
                 )
             {
                 int Age = Convert.ToInt32(userAge.Value);
-                bool IsMale = userSex.Value.ToLower() == context.Phrases.Male().ToLower();
+                bool IsMale = userSex.Value.ToLower() == phrases.Male().ToLower();
 
                 var likesVideoGamesInferred = BernoulliF(ProbVariables.User.playsGames(Age, IsMale)); //our estimation based on Age and Sex
 
@@ -314,12 +342,12 @@ namespace Companion.KorraAI.Models.Joi
                 if (likesVideoGamesInferred.ProbOf(e => e == true).Value > 0.8)
                 {
                     SharedHelper.LogWarning("VG S1 surprise inferred.");
-                    text = context.Phrases.SurpriseVideoGames(1, false); //second parameter is not used
+                    text = phrases.SurpriseVideoGames(1, false); //second parameter is not used
                     executedCount = executedCount + 1;
 
                     return new CommItem
                     {
-                        Action = ActionsEnum.MakeGeneralStatement,
+                        Category = ActionsEnum.MakeGeneralStatement,
                         Name = "ExpressVideoGamesSurprise",
 
                         TextToSay = text,
@@ -330,7 +358,7 @@ namespace Companion.KorraAI.Models.Joi
             }
 
             if (!UserThinksVideoGameIsGoodPresentAnswered) return null;
-            bool UserThinksVideoGameIsGoodPresentYES = context.Phrases.IsYes(factThinksVideoGameIsGoodPresent.Value); //only if answered
+            bool UserThinksVideoGameIsGoodPresentYES = context.BasePhrases.IsYes(factThinksVideoGameIsGoodPresent.Value); //only if answered
 
             //2. Surprise
             //Thinks games are good present - YES
@@ -355,12 +383,12 @@ namespace Companion.KorraAI.Models.Joi
                 {
                     SharedHelper.LogWarning("VG S2 surprise inferred.");
                     bool IsLikesGamesFirstAnswered = factLikesVideoGames.LastUpdated < factThinksVideoGameIsGoodPresent.LastUpdated;
-                    text = context.Phrases.SurpriseVideoGames(2, IsLikesGamesFirstAnswered);
+                    text = phrases.SurpriseVideoGames(2, IsLikesGamesFirstAnswered);
                     executedCount = executedCount + 1;
 
                     return new CommItem
                     {
-                        Action = ActionsEnum.MakeGeneralStatement,
+                        Category = ActionsEnum.MakeGeneralStatement,
                         Name = "ExpressVideoGamesSurprise",
 
                         TextToSay = text,
@@ -395,12 +423,12 @@ namespace Companion.KorraAI.Models.Joi
                 {
                     SharedHelper.LogWarning("VG S3 surprise inferred.");
                     bool IsLikesGamesFirstAnswered = factLikesVideoGames.LastUpdated < factThinksVideoGameIsGoodPresent.LastUpdated;
-                    text = context.Phrases.SurpriseVideoGames(3, IsLikesGamesFirstAnswered);
+                    text = phrases.SurpriseVideoGames(3, IsLikesGamesFirstAnswered);
                     executedCount = executedCount + 1;
 
                     return new CommItem
                     {
-                        Action = ActionsEnum.MakeGeneralStatement,
+                        Category = ActionsEnum.MakeGeneralStatement,
                         Name = "ExpressVideoGamesSurprise",
 
                         TextToSay = text,

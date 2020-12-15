@@ -15,8 +15,18 @@ namespace Companion.KorraAI.Models.Joi
         private static string lastSongAnnouncementUsed = "";
         #endregion
 
-        public Queue<CommItem> ProcessItems(Queue<CommItem> input, IPhrases phrases)
+        IJoiPhrases phrases;
+
+        public SpeechAdaptationEN(IJoiPhrases phrases)
         {
+            this.phrases = phrases;// new PhrasesEN();
+        }
+
+        public Queue<CommItem> ProcessItems(Queue<CommItem> input, ItemManager[] managers)
+        {
+            PureFacts pfManager = (PureFacts)managers.SingleOrDefault(x => x is PureFacts);
+            if (pfManager == null) { SharedHelper.LogError("No Pure Fact Manager in SpeechAdaptationEN."); return null; }
+
             List<CommItem> list = input.ToList();
 
             if (!FlagsShared.InitialGreetingPerformed)
@@ -24,6 +34,8 @@ namespace Companion.KorraAI.Models.Joi
                 list.Insert(0, new CommItem { TextToSay = phrases.SayHello(), IsGreeting = true });
                 FlagsShared.InitialGreetingPerformed = true;
             }
+
+            string username = pfManager.GetValueByName("UserName");
 
             for (int i = 0; i < list.Count; i++)
             {
@@ -36,7 +48,7 @@ namespace Companion.KorraAI.Models.Joi
                 //}
 
                 //add song announcement
-                if (list[i].Action == ActionsEnum.MakeSuggestion && list[i].Suggestion == SuggestionsEnum.ListenToSong)
+                if (list[i].Category == ActionsEnum.MakeSuggestion && list[i].SubCategory == SuggestionsEnum.ListenToSong)
                 {
                     CommItem item = list[i];
                     item.TextToSay = AddSongAnnouncement(item.TextToSay, OneSongAlreadyPlanned);
@@ -46,19 +58,19 @@ namespace Companion.KorraAI.Models.Joi
                 }
 
                 // add user name for the interaction
-                if (list[i].Action == ActionsEnum.AskUncertanFactQuestion
-                    || list[i].Action == ActionsEnum.AskPureFactQuestionAboutUser
-                    || list[i].Action == ActionsEnum.ChangeVisualAppearance
-                    || (list[i].Action == ActionsEnum.MakeSuggestion && list[i].Suggestion != "" && list[i].Suggestion != SuggestionsEnum.TellJoke)
+                if (list[i].Category == ActionsEnum.AskUncertanFactQuestion
+                    || list[i].SubCategory == ActionsEnum.AskPureFactQuestionAboutUser
+                    || list[i].Category == ActionsEnum.ChangeVisualAppearance
+                    || (list[i].Category == ActionsEnum.MakeSuggestion && list[i].SubCategory != "" && list[i].SubCategory != SuggestionsEnum.TellJoke)
                     )
                 {
                     CommItem item = list[i];
-                    item.TextToSay = AddCallByName(item.TextToSay);
+                    item.TextToSay = AddCallByName(item.TextToSay, username);
                     list[i] = item;
                 }
             }
 
-            DisablePlayMusicAftertInitialGreeting(ref list);
+            DisablePlayMusicAftertInitialGreeting(ref list, managers);
 
             KorraModelHelper.CoupleTwoInteractionsTogether(ref list, "UserName", "BotName");
 
@@ -107,25 +119,23 @@ namespace Companion.KorraAI.Models.Joi
             return text;
         }
 
-        private string AddCallByName(string originalText)
+        private string AddCallByName(string originalText, string username)
         {
-            string Username = PureFacts.GetValueByName("UserName");
-
-            if (!string.IsNullOrEmpty(Username) && (KorraModelHelper.GetChance(3))) //33% chance to use the name
+            if (!string.IsNullOrEmpty(username) && (KorraModelHelper.GetChance(3))) //33% chance to use the name
             {
-                return KorraModelHelper.FirstCharToUpper(Username) + ", " + KorraModelHelper.FirstCharToLower(originalText);
+                return KorraModelHelper.FirstCharToUpper(username) + ", " + KorraModelHelper.FirstCharToLower(originalText);
             }
             else return originalText;
         }
 
-        private void DisablePlayMusicAftertInitialGreeting(ref List<CommItem> list)
+        private void DisablePlayMusicAftertInitialGreeting(ref List<CommItem> list, ItemManager[] managers)
         {
             if (list.Count > 0
-                && list[0].IsGreeting
-                && list[1].Action == ActionsEnum.MakeSuggestion
-                && list[1].Suggestion == SuggestionsEnum.ListenToSong)
+                && list[0].IsGreeting //to make sure it is the start of the session
+                && list[1].Category == ActionsEnum.MakeSuggestion
+                && list[1].SubCategory == SuggestionsEnum.ListenToSong)
             {
-                KorraModelHelper.RemoveInteraction(ref list, 1);
+                KorraModelHelper.RemoveInteraction(ref list, 1, managers);
             }
         }
     }
