@@ -41,7 +41,9 @@ And also:
 
 **License**:
 
-The code in this repository is GPL-ed. The ECA models are free to re-use. KorraAI uses several commercial components that need a licesense. If it is not for simple try and experiment you must purchase the following components:
+The code in this repository is under the GPL3 license. If you find yourself restricted by the GPL3 license, a commercial license can be provided. The ECA models are free to re-use. 
+
+KorraAI uses several commercial components that need a license. If it is not for simple try and experiment you must purchase the following components:
 
 https://assetstore.unity.com/packages/tools/animation/salsa-lipsync-suite-148442
 
