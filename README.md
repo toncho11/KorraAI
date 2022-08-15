@@ -41,8 +41,7 @@ And also:
 
 **License**:
 
-The code in this repository is GPL-ed. You can ask for commercial licesense.
-KorraAI uses several commercial components that need a licesense. If it is not for simple try and experiment you must purchase the following components:
+The code in this repository is GPL-ed. KorraAI uses several commercial components that need a licesense. If it is not for simple try and experiment you must purchase the following components:
 
 https://assetstore.unity.com/packages/tools/animation/salsa-lipsync-suite-148442
 
